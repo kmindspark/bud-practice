@@ -1,0 +1,233 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'dbm'
+require 'bud'
+require 'bud/graphs'
+require 'bud/viz_util'
+require 'getopt/std'
+
+include VizUtil
+
+module Depends
+  state do
+    table :depends, [:bud_obj, :rid, :lhs, :op, :rhs, :nm, :in_body]
+  end
+end
+
+class GlobalDepAnalyzer
+  include Bud
+  include Depends
+  # this module's purpose and mechanism are very similar
+  # to those of basic stratification.  here, we are interested
+  # in NM paths that DO cross temporal edges.
+
+  state do
+    table :depends_tc, [:lhs, :rhs, :via, :nm]
+  end
+
+  bloom do
+    depends_tc <= depends{|d| [d.lhs, d.rhs, d.rhs, d.nm]}
+    depends_tc <= (depends * depends_tc).pairs(:rhs => :lhs) do |d, tc|
+      [d.lhs, tc.rhs, d.rhs, (d.nm or tc.nm)]
+    end
+  end
+end
+
+module TPSchema
+  state do
+    table :deltas, [:bud_time, :tab, :nm]
+    table :zerod_cards, [:bud_time, :table, :cnt, :pred]
+    table :nm_tab, [:table]
+    table :collapsible_base, [:start, :fin]
+    table :collapsible, [:start, :fin]
+    scratch :collapsible_tmp, [:start, :fin]
+    scratch :lcl_best_interval, [:start, :fin]
+    table :best_interval, [:start, :fin]
+  end
+end
+
+module DeltaLogic
+  include TPSchema
+  bloom do
+    zerod_cards <= cardinalities{|c| c.to_a + [c.bud_time-1]}
+    zerod_cards <= (times * depends).pairs do |t, d|
+      unless cardinalities{|c| c[1] if c[0] == t.bud_time}.include? d[1]
+        [t.bud_time, d[1], 0, t.bud_time - 1]
+      end
+    end
+
+    nm_tab <= depends do |d|
+      [d[1]] if d[4]
+    end
+
+    deltas <= (zerod_cards * zerod_cards).pairs(:table => :table, :bud_time => :pred) do |c1, c2|
+      if c1.bud_time == c2.bud_time - 1 and c1.table == c2.table and c1.cnt != c2.cnt
+        if nm_tab.include? [c1.table]
+          [c2.bud_time, c1.table, true]
+        else 
+          [c2.bud_time, c1.table, false]
+        end
+      end
+    end
+  end
+end
+
+module VanillaTraceProcessing
+  include TPSchema
+  include DeltaLogic
+
+  state do
+    scratch :tp, times.schema
+    scratch :bi1, best_interval.schema
+  end
+
+  bloom do
+    tp <= times.notin(deltas, :bud_time => :bud_time) {|t, d| true if d.nm}
+    collapsible_base <= tp {|t| [t.bud_time-1, t.bud_time]}
+    collapsible <= collapsible_base
+
+    collapsible <= (collapsible_base * collapsible).pairs(:fin => :start) do |b, c|
+      [b.start, c.fin]
+    end
+
+    bi1 <= collapsible.notin(collapsible, :start => :start) {|c1, c2| true if c2.fin > c1.fin}
+    best_interval <= bi1.notin(collapsible, :fin => :fin) {|c1, c2| true if c2.start < c1.start}
+  end
+end
+
+class SimpleTraceProcessor
+  include Bud
+  include TraceCardinality
+  include Depends
+  include VanillaTraceProcessing
+    
+end
+
+def collapse(intervals, host, time)
+  return time unless @opts["C"]
+  # worth rethinking when the # of intervals/instance gets high
+  intervals[host].each do |i|
+    if time > i[0] and time < i[1]
+      return i[1]
+    end
+  end
+  return time
+end
+
+def usage
+  puts "USAGE:"
+  exit
+end
+
+usage unless ARGV[0]
+usage if ARGV[0] == '--help'
+
+@opts = Getopt::Std.getopts("CLo:")
+
+snd_info = {}
+rcv_info = {}
+clean_arg = []
+intervals = {}
+
+
+da = GlobalDepAnalyzer.new
+
+ARGV.each do |arg_raw|
+  elems = arg_raw.split("_")
+  arg = elems[1..4].join("_")
+  clean_arg << arg
+  snd_info[arg] = []
+  rcv_info[arg] = []
+
+  meta, data = get_meta2("#{arg_raw}")
+  tp = SimpleTraceProcessor.new
+
+  meta[:depends].each do |m|
+    tp.depends << m  
+    da.depends << m
+  end
+
+  data.each do |d|
+    tp.full_info << d
+    if meta[:tabinf].map{|m| m[0] if m[1] == "Bud::BudChannel"}.include? d[1]
+      if d[1] =~ /_snd\z/
+        snd_info[arg] << d 
+      else
+        rcv_info[arg] << d
+      end
+    elsif meta[:tabinf].map{|m| m[0] if m[1] == "Bud::BudPeriodic"}.include? d[1]
+    end
+  end
+
+  tp.tick
+
+  puts "entries in collapsible: #{tp.collapsible.length}"
+  puts "entries in base: #{tp.collapsible_base.length}"
+  puts "entries in deltas: #{tp.deltas.length}"
+
+  intervals[arg] = []
+  tp.best_interval.each do |n| 
+    puts "BEST INTERVAL[#{arg}]: #{n.inspect}"
+    intervals[arg] << n
+  end
+end
+
+da.tick
+nmreach = {}
+da.depends_tc.each do |d|
+  nmreach[d[0]] = {} unless nmreach[d[0]]
+  if nmreach[d[0]][d[1]]
+    nmreach[d[0]][d[1]] = d[3] or nmreach[d[0]][d[1]]
+  else
+    nmreach[d[0]][d[1]] = d[3]
+  end
+end
+
+# our local intervals relations are too optimistic.  to say that intervals[foo] = [2, 5]
+# is merely to say that nothing NM happened locally btw 2 and 5.  it is only safe to collapse
+# 2 and 5 if during this interval, we could not have BOTH caused and perceived the results of 
+# a NM deduction.  we can (again, conservatively) ensure that this is not the case by showing
+# that from 2-5, there exist no messages A and B s.t. we sent A and received B in the interval 2..5
+# and B <n A (where <n means is globally NM-derivable from).
+
+# we can of course do better than this even with the data we have, but it is complicated and we'll
+# get to it later.
+
+plot_data = []
+snd_info.each_pair do |k1, v1|
+  rcv_info.each_pair do |k2, v2|
+    v1.each do |lval|
+      v2.each do |rval|
+        unless k1 == k2
+          # erm, tuple equivalence?
+          l = lval[2].clone
+          r = rval[2].clone
+          l.shift
+          r.shift
+          if l.inspect == r.inspect
+            plot_data << [l.inspect, k1, k2, lval[0], rval[0], rval[1]]
+          end
+        else
+          if collapse(intervals, k1, lval[0]) == collapse(intervals, k2, rval[0]) and lval[0] < rval[0]
+            unless nmreach[rval[1]].nil?
+              if nmreach[rval[1]][lval[1].gsub(/_snd\z/, "")]
+                match = intervals[k1].find_all{|i| i[1] == collapse(intervals, k1, lval[0])}.first
+                intervals[k1].delete(match)
+                intervals[k1] << [match[0], lval[0]]
+                intervals[k1] << [lval[0]+1, match[1]]
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+rpd = plot_data.map do |p|
+  [p[0], p[1], p[2], collapse(intervals, p[1], p[3]), collapse(intervals, p[2], p[4]), p[5]]
+end
+
+st = SpaceTime.new(rpd, @opts["L"])
+st.process
+st.finish("spacetime_trace_#{clean_arg.join('-')}", @opts["o"])

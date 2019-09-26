@@ -1,0 +1,171 @@
+== 0.9.8 / ???
+
+* Fix bug in the stratification algorithm
+* Fix bug with insertions into stdio inside bootstrap blocks
+* Improve error message when <~ applied to a collection type that doesn't
+  support it (#316)
+* Fix rescan logic for Zookeeper-backed collections (#317)
+* Fix rescan logic for chained negation operators in a single rule
+* Support + operator for concatenating tuples
+* More consistent behavior for #==, #eql?, and #hash methods on Bud tuple
+  objects (TupleStruct)
+* Fix intermittent EM::ConnectionNotBound exceptions during the Bud shutdown
+  sequence
+* Improve stratification algorithm to be slightly more aggressive; that is, we
+  can place certain rules in an earlier strata than we were previously
+  (partially fixes #277)
+* Add Rakefile to simplify common development operations (Joel VanderWerf, #324)
+
+== 0.9.7 / 2013-04-22
+
+* Avoid raising an exception when Bud is used with Ruby 2.0. There isn't
+  anything special that Bud itself needs to do to support Ruby 2.0, but
+  RubyParser doesn't properly support 2.0 yet. So using 2.0-only syntax in Bud
+  rules is unlikely to work (until RubyParser is updated), but no other problems
+  have been observed.
+* Reject <= on collections from outside Bloom rules (#289, Aaron Davidson). The
+  previous behavior was error-prone: inserting into a scratch collection via <=
+  was not rejected but the inserted data would immediately be discarded at the
+  beginning of the next tick. Hence, it is simpler to require <+ or <~ for all
+  insertions from outside Bloom rules.
+* Fix bug in join operators whose qualifiers reference collections defined
+  inside imported modules (#301)
+* Fix bug in join operators when the same table and column name appears on the
+  LHS of multiple join predicates (#313)
+* Fix bug in outer joins with multiple predicates (#315)
+* Fix several bugs in rescan/invalidation logic for tables in the presence of
+  upstream deletions (#303)
+* Fix regression in file_reader collections (#304)
+* Improve chaining of notin operators
+* Optimize join evaluation with multiple predicates
+* Optimize notin self joins
+* Improve error reporting for syntax errors on temp collections (#310)
+* Add Travis CI integration hooks (#300, Josh Rosen)
+
+Lattices:
+
+* Rename lmap#apply_monotone to lmap#apply. Also, allow #apply to take either
+  monotone functions or morphisms, and improve error reporting.
+* Add lmap#filter. This takes an lmap whose values are elements of the lbool
+  lattice and returns an lmap containing only those k/v pairs where the value is
+  true.
+* More intuitive lattice equi-join syntax (lset#eqjoin). Rather than specifying
+  the join predicate(s) using array indexes, instead allow them to be specified
+  using a hash of field names, as in traditional Bloom joins. This only works
+  when the lset contains Structs.
+* Remove lset#project, and allow lset#eqjoin to take zero predicates; in the
+  latter case, eqjoin computes the Cartesian product.
+* Support deletion rules (<-) with lattice values on the RHS
+
+== 0.9.6 / 2013-02-25
+
+* Support syntax sugar for initializing lattices (#294). For example, rather
+  than writing "foo <= Bud::MaxLattice.new(2)", you can now just write "foo <=
+  2". Note that, due to a bug in the superator gem, you cannot use this syntax
+  with the <+ operator.
+* Allow nested lattice values to be sent over channels (#295, patch from Josh
+  Rosen). Lattice values could previously be sent as a field value in a tuple
+  delivered over a channel, but they could not be embedded arbitrarily deeply
+  within tuples (e.g., lattices nested within an array could not previously be
+  sent as a field value).
+* Support "Comparable" for Bud::Lattice values
+* Add support for lattices to rebl
+* Reject attempts to insert into stdio via <+ (#288)
+* Restore functionality of reading from stdio (i.e., stdin) with MRI 1.9
+* Improve MRI 1.8 compatibility
+* Require ruby_parser >= 3.1.0
+* Fix bug in bootstrap blocks for lattice values
+* Fix bug in rescan/invalidation for rules that reference lattice values and use
+  the <+ or <~ operators (#290)
+* Fix bug in rescan logic for notin operator (#291)
+* Fix bug in notin operators involving self joins (#298)
+* Fix error when output from a notin operator was fed into a lattice
+
+== 0.9.5 / 2012-11-24
+
+* Lattice branch (Bloom^L) merged
+* Compatibility with recent versions of ruby_parser (3.0.2+) and ruby2ruby
+  (2.0.1+). Older versions of these two gems are no longer supported
+* Add support for aggregate functions that take multiple input columns
+* Add built-in aggregate function accum_pair(x, y), which produces a Set of
+  pairs (two-element arrays [x,y])
+* Support user-specified code blocks in payloads(), argagg(), argmin() and
+  argmax()
+* Change behavior of BudChannel#payloads for channels with two
+  columns. Previously we returned a single *column* (scalar) value in this case;
+  now we always return a tuple with k-1 columns
+* More consistent behavior for BudCollection#sort when used outside Bloom
+  programs
+* Restore support for each_with_index() over Bud collections
+* Restore functionality of Zookeeper-backed Bud collections and fix
+  incompatibility with recent (> 0.4.4) versions of the Zookeeper gem
+* Optimize parsing of Bloom statements, particularly for large Bloom programs
+* Fix bug in argagg state materialization
+* Fix bug in chaining argmin() or argmax() expressions
+* Fix bug in chaining notin() expressions
+
+== 0.9.4 / 2012-09-06
+
+* Optimize grouping performance
+* Fix regression in dbm-backed collections with MRI 1.8
+* Fix regression in grouping operator with MRI 1.8 (#280)
+* Fix bug in programs that applied non-monotonic operators to scratch
+  collections under certain circumstances (#281)
+* Fix bug in "notin" with multiple qualifiers (#282)
+
+== 0.9.3 / 2012-08-20
+
+* Change behavior of accum() aggregate to return a Set, rather than an Array in
+  an unspecified order
+* Fix several serious bugs in caching/invalidation of materialized operator
+  state (#276, #278, #279)
+* Avoid possible spurious infinite loop with dbm-backed collections
+* Optimize aggregation/grouping performance
+* Fix bugs and improve performance for materialization of sort operator
+* Fix REBL regression with push-based runtime (#274)
+* Minor performance optimizations for simple projection rules
+* Remove dependency on gchart
+* Built-in support for code coverage with MRI 1.9 and SimpleCov
+
+== 0.9.2 / 2012-05-19
+
+* Add new aggregate functions: bool_and() and bool_or()
+* Fix bugs in notin() stratification and implementation (#271)
+* Fix a bug in processing multi-way joins defined inside modules
+* Fix two bugs in reduce() operator
+  * Incorrect default value was sometimes returned
+  * Didn't handle reduce() outputs that aren't tuples with two fields
+* Improve reduce() operator error reporting
+* Improve MRI 1.9 compatibility
+
+== 0.9.1 / 2012-04-10
+
+* Reject attempts to insert a tuple into a collection with more fields than are
+  in the collection's schema
+  * Previous behavior was to ignore additional fields, but this was found to be
+    error-prone
+* Remove builtin support for BUST (web services API); this avoids the need to
+  depend on the json, nestful and i18n gems
+
+== 0.9.0 / 2012-03-21
+
+* Major performance enhancements
+  * Much, much faster: rewritten runtime that now uses a push-based dataflow
+  * Operator state is cached; only deltas are updated across ticks in many cases
+  * Joins that use collection keys can use collection storage for improved
+    performance
+* Improved compatibility: Bud now works with MRI 1.9 (as well as 1.8.7)
+  * Switched from ParseTree to ruby_parser
+  * Rewritten Bloom module system
+* Tuples are now represented as Ruby Structs, rather than Arrays
+  * This avoids the need to define column accessor methods by hand
+* Tests now use MiniTest rather than Test::Unit
+* Observe the following incompatibilities:
+  * Support for "semi-structured" collections have been removed. That is,
+    previously you could store extra field values into a tuple; those values
+    would be collapsed into a single array that was tacked onto the end of the
+    tuple.
+  * Support for Bloom-based signal handling has been removed
+  * Support for the "with" syntax has been removed
+  * The Bloom-based "deployment" framework has been removed
+  * Support for Tokyo Cabinet-backed collections has been removed

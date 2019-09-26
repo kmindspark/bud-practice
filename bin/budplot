@@ -1,0 +1,234 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'bud'
+require 'bud/bud_meta'
+require 'bud/graphs'
+require 'bud/meta_algebra'
+require 'bud/viz_util'
+require 'getopt/std'
+
+include VizUtil
+
+def is_constant?(m)
+  begin
+    return (eval("defined?(#{m})") == "constant")
+  rescue SyntaxError
+    return false
+  end
+end
+
+def make_instance(mods)
+  # If we're given a single identifier that names a class, just return an
+  # instance of that class. Otherwise, define a bogus class that includes all
+  # the module names specified by the user and return an instance.
+  tmpserver = TCPServer.new('127.0.0.1', 0) # get a free port
+  default_params = {:dbm_dir => "/tmp/budplot_dbm_" + SecureRandom.uuid.to_s, :port => tmpserver.addr[1]}
+
+
+  mods.each do |m|
+    unless is_constant? m
+      puts "Error: unable to find definition for module or class \"#{m}\""
+      exit
+    end
+
+    mod_klass = eval m
+    if mod_klass.class == Class
+      if mods.length == 1
+        return mod_klass.new(default_params)
+      else
+        puts "Error: cannot intermix class \"#{mod_klass}\" with modules"
+        exit
+      end
+    elsif mod_klass.class != Module
+      puts "Error: \"#{m}\" is not a module or class name"
+      exit
+    end
+  end
+
+  def_lines = ["class FooBar",
+               "include Bud",
+               "include MetaAlgebra",
+               "include MetaReports",
+               mods.map {|m| "include #{m}"},
+               "end"
+              ]
+  class_def = def_lines.flatten.join("\n")
+  eval(class_def)
+  f = FooBar.new(default_params)
+  3.times{ f.tick }
+  f
+end
+
+def trace_counts(begins)
+  complexity = {:data => {}, :coord => {}}
+  if !begins[:start].nil?
+    begins[:start].each_pair do |k, v|
+      if @data and @data[k]
+        complexity[:data][k] = @data[k].length
+      end
+    end
+
+    begins[:finish].each_pair do |k, v|
+      if @data and @data[k]
+        complexity[:coord][k] = @data[k].length
+      end
+    end
+  end
+  complexity
+end
+
+def process(mods)
+  d = make_instance(mods)
+
+  interfaces = {}
+  d.t_provides.to_a.each do |prov|
+    interfaces[prov.interface] = prov.input
+  end
+
+  tabinf = {}
+  inp = []
+  outp = []
+  priv = []
+  d.tables.each do |t|
+    tab = t[0].to_s
+    tabinf[tab] = t[1].class.to_s
+    next if d.builtin_tables.has_key? t[0]
+
+    if interfaces[tab].nil?
+      priv << t
+    else
+      if interfaces[tab]
+        inp << t
+      else
+        outp << t
+      end
+    end
+  end
+
+  viz_name = "bud_doc/" + mods.join("_") + "_viz"
+  graph_from_instance(d, "#{viz_name}_collapsed", "bud_doc", true, nil, @data)
+  graph_from_instance(d, "#{viz_name}_expanded", "bud_doc", false, nil, @data)
+  begins = graph_from_instance(d, "#{viz_name}_expanded_dot", "bud_doc", false, "dot", @data)
+
+
+  complexity = trace_counts(begins)
+  # try to figure out the degree of the async edges
+  deg = find_degrees(d, @data)
+  unless deg.nil?
+    deg.each_pair do |k, v|
+      puts "DEGREE: #{k} = #{v.keys.length}"
+    end
+  end
+
+  write_index(inp, outp, priv, viz_name, complexity)
+end
+
+def find_degrees(inst, data)
+  degree = {}
+  return if data.nil?
+  data.each_pair do |k, v|
+    tab = inst.tables[k.gsub("_snd", "").to_sym]
+    if !tab.nil?
+      if tab.class == Bud::BudChannel
+        v.each_pair do |k2, v2|
+          v2.each do |row|
+            loc = row[tab.locspec_idx]
+            degree[k] ||= {}
+            degree[k][loc] = true
+          end
+        end
+      end
+    end
+  end
+  return degree
+end
+
+def write_index(inp, outp, priv, viz_name, cx)
+  f = File.open("bud_doc/index.html", "w")
+  f.puts "<html>"
+  f.puts "<embed src=\"#{ENV['PWD']}/#{viz_name}_collapsed.svg\" width=\"100%\" height=\"60%\" type=\"image/svg+xml\" pluginspage=\"http://www.adobe.com/svg/viewer/install/\" />"
+
+  f.puts "<table border='1' valign='top' width = '100%'><tr valign='top'>"
+  f.puts "<td valign='top'>"
+  f.puts "<h2>Input Interfaces</h2>"
+  do_table(f, inp)
+  f.puts "</td><td>"
+  f.puts "<h2>Output Interfaces</h2>"
+  do_table(f, outp)
+  f.puts "</td><td>"
+  f.puts "<h2>Trace Analysis Results</h2>"
+  f.puts "<h3>Data Complexity</h3>"
+  do_cx(f, cx[:data])
+  f.puts "<h3>Coordination Complexity</h3>"
+  do_cx(f, cx[:coord])
+  f.puts "</tr></table>"
+  f.puts "</html>"
+  f.close
+end
+
+def do_cx(f, cx)
+  f.puts "<table border='1'>"
+  cx.each_pair do |k, v|
+    f.puts "<tr><td>#{k}</td><td>#{v.inspect}</td></tr>"
+  end
+  f.puts "</table>"
+end
+
+def do_table(f, info)
+  f.puts "<table border='1'>"
+  info.sort{|a, b| a[0].to_s <=> b[0].to_s}.each do |tbl_name, tbl_impl|
+    next if tbl_impl.schema.nil?
+    key_s = tbl_impl.key_cols.join(", ")
+    val_s = tbl_impl.val_cols.join(", ")
+    f.puts "<tr><td><b>#{tbl_name}</b></td>"
+    f.puts "<td>#{key_s}</td><td>#{val_s}</td></tr>"
+  end
+  f.puts "</table>"
+end
+
+def get_trace_data
+  data = nil
+
+  if @opts["t"]
+    data = {}
+    traces = @opts['t'].class == String ? [@opts['t']] : @opts['t']
+    traces.each do |t|
+      meta, da = get_meta2(t)
+      da.each do |d|
+        data[d[1]] ||= {}
+        data[d[1]][d[0]] ||= []
+        data[d[1]][d[0]] << d[2]
+      end
+    end
+  end
+  data
+end
+
+if ARGV.length < 2
+  puts "Usage: budplot [-I PATH_TO_RUBY_INCLUDES] LIST_OF_FILES LIST_OF_MODULES_OR_CLASSES"
+  exit
+end
+
+@opts = Getopt::Std.getopts("I:t:")
+unless @opts["I"].nil?
+  if @opts["I"].class == Array
+    @opts["I"].each{|i| $:.unshift i} 
+  else  
+    $:.unshift @opts["I"]
+  end
+end
+
+@data = get_trace_data
+`mkdir bud_doc`
+
+modules = []
+ARGV.each do |arg|
+  if File.exists? arg
+    arg = File.expand_path arg
+    require arg
+  else
+    modules << arg
+  end
+end
+
+process(modules)
