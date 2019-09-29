@@ -5,9 +5,9 @@ module ChatProtocol
       channel :mcast
       table :testtable
       periodic :timer, 1
-      channel :ack [:@addr, :client] => [:nick]
+      channel :ack, [:@addr, :timestamp]
       table :pending
-      table :acktimestamps [:@addr, :timestamp]
+      table :acktimestamps, [:timestamp]
     end
   
     DEFAULT_ADDR = "127.0.0.1:12345"

@@ -30,17 +30,15 @@ class ChatClient
         [Time.now.to_f, s.line]
     end
 
-    acktimestamps <~ ack {|a| a.timestamp}
+    acktimestamps <= ack {|a| [a.timestamp]}
+
+    #mcast <~ pending.notin(acktimestamps, :key => :timestamp) do |m, a|
+    #    [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key > 500.0
+    #end
 
     mcast <~ pending do |m|
-        [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key > 5.0
+      [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key > 1.0
     end
-    
-    #stdio <~ ack.inspected
-
-    #mcast <~ (timer * stdio).pairs do |t, s|
-    #    [@server2, [ip_port, @nick, Time.new.strftime("%I:%M.%S"), s.line]] if ack.eql? "NoAck"
-    #end
 
     stdio <~ mcast { |m| [pretty_print(m.val)] }
   end

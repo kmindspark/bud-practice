@@ -14,7 +14,7 @@ class ChatServer
     nodelist <= connect { |c| [c.client, c.nick] }
     #stdio <~ nodelist.inspected
     mcast <~ (mcast * nodelist).pairs { |m,n| [n.key, m.val] }
-    ack <~ (mcast * nodelist).pairs { |m,n| [n.key, m.val[2]] }
+    ack <~ mcast { |m| [m.val[0], m.val[2]] }
   end
 end
 
