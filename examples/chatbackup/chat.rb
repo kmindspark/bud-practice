@@ -22,23 +22,35 @@ class ChatClient
   end
 
   bloom do
+    curTimeCapture <= [[Time]]
+
     mcast <~ stdio do |s|
-        [@server1, [ip_port, @nick, Time.now.to_f, s.line]]
+        [@server1, [ip_port, @nick, Time.now.to_f.round(2), s.line]]
     end
 
     pending <= stdio do |s|
-        [Time.now.to_f, s.line]
+        [Time.now.to_f.round(2), s.line]
+    end
+    #stdio <~ [["PENDING"]]
+    stdio <~ pending.inspected
+
+    acktimestamps <= ack { |a| [a.timestamp[0], a.timestamp[1]] }
+    #stdio <~ [["ACKTIMESTAMPS"]]
+    stdio <~ acktimestamps.inspected
+
+    intermediate <= pending.notin(acktimestamps, :key => :timestamp)
+    #stdio <~ [["INTERMEDIATE"]]
+    stdio <~ intermediate.inspected
+
+    mcast <~ intermediate do |m|
+        [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key.round(2) > 5.0
     end
 
-    acktimestamps <= ack {|a| [a.timestamp]}
-
-    #mcast <~ pending.notin(acktimestamps, :key => :timestamp) do |m, a|
-    #    [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key > 500.0
-    #end
-
-    mcast <~ pending do |m|
-      [@server2, [ip_port, @nick, Time.now.to_f, m.val]] if Time.now.to_f - m.key > 1.0
+    todelete <= intermediate do |m|
+        [m.key] if Time.now.to_f - m.key.round(2) > 5.0
     end
+
+    pending <- todelete
 
     stdio <~ mcast { |m| [pretty_print(m.val)] }
   end

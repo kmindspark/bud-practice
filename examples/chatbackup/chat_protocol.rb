@@ -7,7 +7,11 @@ module ChatProtocol
       periodic :timer, 1
       channel :ack, [:@addr, :timestamp]
       table :pending
-      table :acktimestamps, [:timestamp]
+      table :acktimestamps, [:timestamp, :message]
+      table :servertwosent, [:timestamp]
+      table :todelete
+      table :intermediate
+      table :curTimeCapture
     end
   
     DEFAULT_ADDR = "127.0.0.1:12345"

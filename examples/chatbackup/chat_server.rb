@@ -13,8 +13,9 @@ class ChatServer
     nodelist <= connect_backup { |c| [c.client, c.nick] }
     nodelist <= connect { |c| [c.client, c.nick] }
     #stdio <~ nodelist.inspected
+    stdio <~ mcast.inspected
     mcast <~ (mcast * nodelist).pairs { |m,n| [n.key, m.val] }
-    ack <~ mcast { |m| [m.val[0], m.val[2]] }
+    ack <~ mcast { |m| [m.val[0], [m.val[2], m.val[3]]] }
   end
 end
 
