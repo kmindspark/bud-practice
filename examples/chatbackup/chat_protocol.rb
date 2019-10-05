@@ -7,7 +7,7 @@ module ChatProtocol
       periodic :timer, 1
       channel :ack, [:@addr, :timestamp]
       table :pending
-      table :acktimestamps, [:timestamp, :message]
+      table :acktimestamps, [:timestamp] => [:message]
       table :servertwosent, [:timestamp]
       table :todelete
       table :intermediate
