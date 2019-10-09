@@ -19,7 +19,7 @@ class ChatClient
 
   bloom do
     mcast <~ stdio do |s|
-      [@server, [ip_port, @nick, Time.new.strftime("%I:%M.%S"), s.line]]
+      [@server, [ip_port, s.line.split("/")[0], @nick, Time.new.strftime("%I:%M.%S"), s.line]]
     end
 
     stdio <~ mcast { |m| [pretty_print(m.val)] }
@@ -27,8 +27,13 @@ class ChatClient
 
   # format chat messages with color and timestamp on the right of the screen
   def pretty_print(val)
-    str = "\033[34m"+val[1].to_s + ": " + "\033[31m" + (val[3].to_s || '') + "\033[0m"
-    pad = "(" + val[2].to_s + ")"
+    x = ''
+    if val[4].to_s.split("/").length > 1 then
+      x = val[4].to_s.split("/")[1]
+    end
+
+    str = "\033[34m"+val[2].to_s + ": " + "\033[31m" + (x || '') + "\033[0m"
+    pad = "(" + val[3].to_s + ")"
     return str + " "*[66 - str.length,2].max + pad
   end
 end

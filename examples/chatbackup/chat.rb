@@ -31,18 +31,10 @@ class ChatClient
     pending <= stdio do |s|
         [Time.now.to_f.round(2), s.line]
     end
-    #stdio <~ [["PENDING"]]
-    #stdio <~ pending.inspected
 
     acktimestamps <= ack { |a| [a.timestamp[0], a.timestamp[1]] }
-    #stdio <~ [["ACKTIMESTAMPS"]]
-    #stdio <~ acktimestamps.inspected
 
     pending <- acktimestamps
-
-    #intermediate <= pending.notin(acktimestamps, :key => :timestamp)
-    #stdio <~ [["INTERMEDIATE"]]
-    #stdio <~ intermediate.inspected
 
     mcast <~ pending do |m|
         [@server2, [ip_port, @nick, m.key.round(2), m.val]] if Time.now.to_f - m.key.round(2) > 2.0
@@ -51,13 +43,7 @@ class ChatClient
     pending <- pending do |m|
       [m.key, m.val] if Time.now.to_f - m.key.round(2) > 2.0
     end
-
-    #odelete <= intermediate do |m|
-    #    [m.key] if Time.now.to_f - m.key.round(2) > 5.0
-    #end
-
-    #pending <- todelete
-
+    
     stdio <~ mcast { |m| [pretty_print(m.val)] }
   end
 
