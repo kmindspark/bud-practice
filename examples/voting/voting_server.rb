@@ -37,6 +37,7 @@ class VotingServer
 
     resp <~ mcast {|m| [m.val[0], ["Invalid Password"]] if m.val[3].split('/')[0] != "passwd"}
     resp <~ mcast {|m| [m.val[0], ["Election not in session"]] if Time.now.to_f < 1570835457 or Time.now.to_f > 2570835557}
+    resp <~ mcast {|m| [m.val[0], ["Thank you for voting!"]] if ((m.val[3].split('/')[1] == "A" or m.val[3].split('/')[1] == "B") and m.val[3].split('/')[0] == "passwd" and Time.now.to_f > 1570835457 and Time.now.to_f < 2570835557)}
 
     vote_cnt_A <= votesA.size
     vote_cnt_B <= votesB.size
