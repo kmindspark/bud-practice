@@ -3,12 +3,15 @@ module VotingProtocol
       channel :connect, [:@addr, :client] => [:nick]
       channel :connect_backup, [:@addr, :client] => [:nick]
       channel :mcast
+      table   :mcast_mod
       lset    :votesA
       lset    :votesB
       lmax    :vote_cnt_A
       lmax    :vote_cnt_B
       table   :users_voted
       table   :both_votes, [:votesA, :votesB]
+      table   :voter_log
+      scratch :cur_matches
       channel :resp
 
       channel :recoveryRequest
