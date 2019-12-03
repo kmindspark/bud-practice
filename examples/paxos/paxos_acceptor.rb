@@ -20,14 +20,14 @@ class PaxosAcceptor
 
   bloom do
     promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
-    accept {|a| [@proposer, a.val] }
-
+    accepted <~ accept {|a| [@proposer, check_accept(a.val)]}
   end
 
   def check_accept(id_and_val)
+    puts "Received accept message"
     id = id_and_val[0]
     val = id_and_val[1]
-    if id < max_promise_id
+    if id < $max_promise_id
       return [false]
     else
       $max_accept_val = val

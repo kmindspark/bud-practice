@@ -12,26 +12,32 @@ class PaxosProposer
   $agreeing_acceptors = 0
   $highest_id_responded = 0
   $transaction_in_progress = 0
+  $client_addr = 0
 
   state { table :nodelist }
 
   bloom do
     nodelist <= connect { |c| [c.val] if register_new_acceptor}
-    prepare <~ (client_request * nodelist).pairs {|c, n| [n.key, get_new_num(c.val[3])]}
-    accept <~ (promise * nodelist).pairs {|p, n| [n.key, [$propose_number, $advocate_val]] if process_promise(p.val)}
+    stdio <~ nodelist.inspected
+    prepare <~ (client_request * nodelist).pairs {|c, n| [n.key, get_new_num(c.val)]}
+    accept <~ (promise * nodelist).pairs {|p, n| [n.key, [$propose_number, $advocate_val]] if process_promise(p.val)} #fix promise processing
+    stdio <~ accepted.inspected
   end
 
   def register_new_acceptor()
+    puts "Total acceptors: " + $total_acceptors.to_s
     $total_acceptors = $total_acceptors + 1
     return true
   end
 
   def get_new_num(advocate)
+    client_addr = advocate[0]
+    advocate = advocate[3]
     $transaction_in_progress = 1
     $agreeing_acceptors = 0
     $propose_number = $propose_number + 1
     $advocate_val = advocate.to_i
-    return $propose_number;
+    return $propose_number
   end
 
   def end_transaction()
@@ -42,11 +48,12 @@ class PaxosProposer
   end
 
   def process_promise(promise_val)
+    puts promise_val
     if promise_val[1] == false
       return false
     else
       $agreeing_acceptors += 1
-      if promise_val[3] > $highest_id_responded and promise[2] = true
+      if promise_val[3] > $highest_id_responded and promise_val[2] == true
         $highest_id_responded = promise_val[3]
         $advocate_val = promise_val[4]
       end

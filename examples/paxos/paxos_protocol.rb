@@ -5,6 +5,7 @@ module PaxosProtocol
       channel :prepare
       channel :promise
       channel :accept
+      channel :accepted
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"
