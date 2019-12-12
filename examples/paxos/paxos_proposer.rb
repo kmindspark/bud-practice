@@ -15,12 +15,17 @@ class PaxosProposer
   $client_addr = 0
 
   state { table :nodelist }
+  state { table :clientlist}
 
   bloom do
     nodelist <= connect { |c| [c.val] if register_new_acceptor}
-    stdio <~ nodelist.inspected
+    #stdio <~ nodelist.inspected
+
+    clientlist <= client_request {|c| [c.val[0]]}
     prepare <~ (client_request * nodelist).pairs {|c, n| [n.key, get_new_num(c.val)]}
-    accept <~ (promise * nodelist).pairs {|p, n| [n.key, [$propose_number, $advocate_val]] if process_promise(p.val)} #fix promise processing
+    majority <= promise {|p| [$propose_number] if process_promise(p.val)}
+    accept <~ (majority * nodelist).pairs {|m, n| [n.key, [$propose_number, $advocate_val]] if m.key == $propose_number}
+    accepted_to_client <~ (accepted * clientlist).pairs {|a, c| [c.key, a.val]}
     stdio <~ accepted.inspected
   end
 

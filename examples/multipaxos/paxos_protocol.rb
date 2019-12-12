@@ -8,6 +8,7 @@ module PaxosProtocol
       channel :accepted
       scratch :majority
       channel :accepted_to_client
+      scratch   :client_request_temp
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"

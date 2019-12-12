@@ -17,7 +17,7 @@ class PaxosClient
 
   bloom do
     client_request <~ stdio do |s|
-        [@proposer, [ip_port, @nick, Time.now.to_f.round(2), s.line]]
+        [@proposer, [ip_port, nil, Time.now.to_f.round(2), s.line]]
     end
     stdio <~ accepted_to_client.inspected 
   end
