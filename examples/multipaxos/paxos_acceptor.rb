@@ -20,7 +20,7 @@ class PaxosAcceptor
 
   bloom do
     promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
-    accepted <~ accept {|a| [@proposer, check_accept(a.val)]}    
+    accepted <~ accept {|a| [@proposer, check_accept(a.val)]}
   end
 
   def check_accept(id_and_val)
@@ -29,10 +29,10 @@ class PaxosAcceptor
     val = id_and_val[1]
     slot = id_and_val[2]
     if id < $max_promise_id[slot]
-      return [false]
+      return [false, slot, val]
     else
       $max_accept_val[slot] = val
-      return [true, val]
+      return [true, slot, val]
     end
   end
 
