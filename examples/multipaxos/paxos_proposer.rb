@@ -46,6 +46,7 @@ class PaxosProposer
     return val
   end
 
+  
   def register_new_acceptor()
     $total_acceptors = $total_acceptors + 1
     puts "Total acceptors: " + $total_acceptors.to_s
