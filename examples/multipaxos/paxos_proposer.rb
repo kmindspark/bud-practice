@@ -6,7 +6,6 @@ require_relative 'paxos_protocol'
 class PaxosProposer
   include Bud
   include PaxosProtocol
-  $total_acceptors = 0
   $propose_number = 0
   $slot_number = 0
   $advocate_map = {}
@@ -23,40 +22,36 @@ class PaxosProposer
     super opts
   end
 
-  state { table :nodelist }
-  state { table :clientlist}
-  state { table :learnerlist}
-  state { table :acceptor_num}
-
   state do 
-    acceptor_num <= [0]
+    num_acceptors <+ [[0]]
   end
 
   bloom do
     learnerlist <= connect_learner { |c| [c.val]}
     
     nodelist <= connect { |c| [c.val] }
-
-    num_acceptors <= acceptors.size
+    num_acceptors <- (connect * num_acceptors).pairs {|c, n| [n.key]}
+    num_acceptors <+ (connect * num_acceptors).pairs {|c, n| [n.key + 1]}
 
     clientlist <= client_request {|c| [c.val[0]]}
     client_request_temp <= client_request {|c| [get_new_num(c.val), $slot_number]}
     prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
 
-    majority <= promise {|p| [p.val[5], p.val[0]] if process_promise(p.val)}
+    majority <= (promise * num_acceptors).pairs {|p, n| [p.val[5], p.val[0]] if process_promise(p.val, n.key)}
     accept <~ (majority * nodelist).pairs {|m, n| [n.key, [m.val, $advocate_val[m.key], m.key]]}
     accepted_to_client <~ (accepted * clientlist).pairs {|a, c| [c.key, a.val]}
 
-    accepted_to_learner <~ join([accepted, learnerlist, num_acceptors]).map{|a, l, n| [l.key, a.val, num_acceptors.val] if test_print(num_acceptors)} 
+    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]} 
     stdio <~ accepted.inspected
   end
 
   def test_print(val)
     puts val
+    return true
   end
 
-  def append_info_for_learner(val)
-    val.push($total_acceptors)
+  def append_info_for_learner(val, val2)
+    val.push(val2)
     return val
   end
 
@@ -86,7 +81,7 @@ class PaxosProposer
     $transaction_in_progress = 0
   end
 
-  def process_promise(promise_val)
+  def process_promise(promise_val, total_acceptors)
     puts promise_val
     slot_number = promise_val[5]
     if promise_val[1] == false
@@ -99,10 +94,10 @@ class PaxosProposer
       end
       puts "PRINTING"
       puts $agreeing_acceptors[slot_number]
-      puts $total_acceptors
-      puts $agreeing_acceptors[slot_number] - $total_acceptors/2
+      puts total_acceptors
+      puts $agreeing_acceptors[slot_number] - total_acceptors/2
       
-      if $agreeing_acceptors[slot_number] > $total_acceptors/2 and !$accept_sent[slot_number]
+      if $agreeing_acceptors[slot_number] > total_acceptors/2 and !$accept_sent[slot_number]
         $accept_sent[slot_number] = true
         return true
       end

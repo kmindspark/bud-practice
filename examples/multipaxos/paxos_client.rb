@@ -12,9 +12,7 @@ class PaxosClient
     @proposer = server
     super opts
   end
-
-  state { table :nodelist }
-
+  
   bloom do
     client_request <~ stdio do |s|
         [@proposer, [ip_port, nil, Time.now.to_f.round(2), s.line]]
