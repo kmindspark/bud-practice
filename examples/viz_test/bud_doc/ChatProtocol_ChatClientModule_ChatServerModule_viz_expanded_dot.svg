@@ -1,0 +1,60 @@
+digraph G {
+	graph [bb="0,0,245.89,196.77",
+		label=""
+	];
+	node [fontname="Times-Roman",
+		fontsize=18,
+		label="\N"
+	];
+	edge [fontname="Times-Roman",
+		fontsize=18
+	];
+	nodelist	[URL="nodelist.html",
+		height=0.5,
+		label=nodelist,
+		pos="50.89,90.77",
+		shape=rect,
+		width=1.0138];
+	mcast	[URL="mcast.html",
+		height=0.51069,
+		label=mcast,
+		pos="50.89,18.385",
+		width=1.1389];
+	nodelist -> mcast	[URL="25-mcast.html",
+		arrowsize=2,
+		minlen=1.5,
+		penwidth=5,
+		pos="e,50.89,37.248 50.89,72.731 50.89,68.032 50.89,62.739 50.89,57.358",
+		style=dashed];
+	connect	[height=0.51069,
+		label=connect,
+		pos="50.89,170.77",
+		width=1.4136];
+	connect -> nodelist	[URL="24-nodelist.html",
+		arrowsize=2,
+		minlen=1.5,
+		penwidth=5,
+		pos="e,50.89,108.86 50.89,152.07 50.89,145.19 50.89,137.04 50.89,128.99"];
+	mcast -> mcast	[URL="25-mcast.html",
+		arrowsize=2,
+		minlen=1.5,
+		penwidth=5,
+		pos="e,80.033,5.4418 80.033,31.328 95.657,33.527 109.89,29.213 109.89,18.385 109.89,12.717 105.99,8.8338 100.03,6.7353",
+		style=dashed];
+	S	[URL="javascript:advanceTo(-2)",
+		color=blue,
+		height=0.72222,
+		label=S,
+		penwidth=3,
+		pos="146.89,170.77",
+		shape=diamond,
+		width=0.75];
+	T	[URL="javascript:advanceTo(0)",
+		color=blue,
+		height=0.72222,
+		label=T,
+		penwidth=3,
+		pos="218.89,170.77",
+		shape=diamond,
+		width=0.75];
+}

@@ -1,0 +1,36 @@
+digraph G {
+	graph [bb="0,0,346,52",
+		label=""
+	];
+	node [fontname="Times-Roman",
+		fontsize=18,
+		label="\N"
+	];
+	edge [fontname="Times-Roman",
+		fontsize=18
+	];
+	S	[URL="javascript:advanceTo(-2)",
+		color=blue,
+		height=0.72222,
+		label=S,
+		penwidth=3,
+		pos="27,26",
+		shape=diamond,
+		width=0.75];
+	T	[URL="javascript:advanceTo(0)",
+		color=blue,
+		height=0.72222,
+		label=T,
+		penwidth=3,
+		pos="99,26",
+		shape=diamond,
+		width=0.75];
+	connect	[height=0.51069,
+		label=connect,
+		pos="195,26",
+		width=1.4136];
+	mcast	[height=0.51069,
+		label=mcast,
+		pos="305,26",
+		width=1.1389];
+}

@@ -6,6 +6,7 @@ require_relative 'paxos_protocol'
 class PaxosProposer
   include Bud
   include PaxosProtocol
+  include PaxosProposerModule
   $total_acceptors = 0
   $propose_number = 0
   $slot_number = 0
@@ -21,34 +22,6 @@ class PaxosProposer
   def initialize(proposer_id, opts={})
     $proposer_id = proposer_id
     super opts
-  end
-
-  state { table :nodelist }
-  state { table :clientlist}
-  state { table :learnerlist}
-  state { table :acceptor_num}
-
-  state do 
-    acceptor_num <= [0]
-  end
-
-  bloom do
-    learnerlist <= connect_learner { |c| [c.val]}
-    
-    nodelist <= connect { |c| [c.val] }
-
-    num_acceptors <= acceptors.size
-
-    clientlist <= client_request {|c| [c.val[0]]}
-    client_request_temp <= client_request {|c| [get_new_num(c.val), $slot_number]}
-    prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
-
-    majority <= promise {|p| [p.val[5], p.val[0]] if process_promise(p.val)}
-    accept <~ (majority * nodelist).pairs {|m, n| [n.key, [m.val, $advocate_val[m.key], m.key]]}
-    accepted_to_client <~ (accepted * clientlist).pairs {|a, c| [c.key, a.val]}
-
-    accepted_to_learner <~ join([accepted, learnerlist, num_acceptors]).map{|a, l, n| [l.key, a.val, num_acceptors.val] if test_print(num_acceptors)} 
-    stdio <~ accepted.inspected
   end
 
   def test_print(val)
