@@ -13,8 +13,10 @@ module PaxosProtocol
       channel :accepted_to_learner
 
       #now transferring ruby functionality to Bloom
-      lset :acceptors
-      lmax :num_acceptors
+      table :nodelist
+      table :clientlist
+      table :learnerlist
+      table :num_acceptors
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"

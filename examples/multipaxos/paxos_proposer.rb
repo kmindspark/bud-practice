@@ -55,12 +55,6 @@ class PaxosProposer
     return val
   end
 
-  def register_new_acceptor()
-    $total_acceptors = $total_acceptors + 1
-    puts "Total acceptors: " + $total_acceptors.to_s
-    return true
-  end
-
   def get_new_num(advocate)
     $slot_number = $slot_number + 1
     client_addr = advocate[0]
