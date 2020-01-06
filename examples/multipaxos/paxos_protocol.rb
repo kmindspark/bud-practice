@@ -17,6 +17,16 @@ module PaxosProtocol
       table :learnerlist
       table :num_acceptors
 
+      table :propose_num
+      table :slot_num
+      table :advocate_val
+      table :agreeing_acceptors
+      table :accept_sent
+      table :highest_id_responded
+
+      table :max_promise_id
+      table :max_promise_val
+
       #now transferring ruby functionality to Bloom
       #lset :acceptors
       #lmax :num_acceptors
@@ -25,3 +35,4 @@ module PaxosProtocol
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"
     DEFAULT_PROPOSER_ADDR = "127.0.0.1:12346"
     DEFAULT_ACCEPTOR_ADDR = "127.0.0.1:12347"
+  end

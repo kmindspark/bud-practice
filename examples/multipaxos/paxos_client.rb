@@ -12,10 +12,10 @@ class PaxosClient
     @proposer = server
     super opts
   end
-  
+
   bloom do
     client_request <~ stdio do |s|
-        [@proposer, [ip_port, nil, Time.now.to_f.round(2), s.line]]
+        [@proposer, [ip_port, nil, Time.now.to_f.round(2), s.line.to_i]]
     end
     stdio <~ accepted_to_client.inspected 
   end

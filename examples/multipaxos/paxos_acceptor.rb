@@ -20,6 +20,9 @@ class PaxosAcceptor
 
   bloom do
     promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
+
+
+    stdio <~ prepare.inspected
     accepted <~ accept {|a| [@proposer, check_accept(a.val)]}
   end
 
@@ -41,6 +44,8 @@ class PaxosAcceptor
     cur_slot = new_id[1]
     new_id = new_id[0]
     return_arr = [new_id, true, false, $max_promise_id[cur_slot] || 0, $max_accept_val[cur_slot] || 0, cur_slot]
+    puts cur_slot
+    puts new_id
     if new_id > ($max_promise_id[cur_slot] || 0)
         $max_promise_id[cur_slot] = new_id
         if ($max_accept_val[cur_slot] || 0) > 0
