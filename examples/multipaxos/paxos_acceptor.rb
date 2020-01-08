@@ -19,11 +19,28 @@ class PaxosAcceptor
   end
 
   bloom do
-    promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
+    cur_prep <= prepare {|p| [p.val[1]]}
 
+    #existing_id <= (max_promise_id * prepare).pairs {|pid, p| [p.val[1], 0] if p.val[1] == pid.key }
+    #existing_val <= (max_accept_val * prepare).pairs {|mav, p| [p.val[1], 0] if p.val[1] == mav.key }
 
-    stdio <~ prepare.inspected
-    accepted <~ accept {|a| [@proposer, check_accept(a.val)]}
+    existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
+    existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
+    
+    max_promise_id <+ existing_id { |e| [e.key, 0] }
+    max_accept_val <+ existing_val { |e| [e.key, 0] }
+    
+    #promise <~ (prepare * max_promise_id * max_accept_val).combos {|p, mp, ma| [p.val[0], [true, false, mp.val, ma.val, p.val[1]]] if p.val[0] > mp.val and ma.val <= 0}
+    #promise <~ (prepare * max_promise_id * max_accept_val).combos {|p, mp, ma| [p.val[0], [true, true, mp.val, ma.val, p.val[1]]] if p.val[0] > mp.val and ma.val > 0}
+    #promise <~ (prepare * max_promise_id * max_accept_val).combos {|p, mp, ma| [p.val[0], [false, true, mp.val, ma.val, p.val[1]]] if p.val[0] < mp.val}
+
+    #stdio <~ prepare.inspected
+
+    #accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], a.val[1]]] if (pid.key == a.key and a.val[0] < pid.val) }
+    #accepted <~ (accept * max_promise_id).pairs {|a, pid| [false, a.val[2], a.val[1]]] if pid.key == a.key and a.val[0] >= pid.val }
+    #max_promise_id <= (accept * max_promise_id).pairs {|a, pid| [a.val[2], a.val[0]] if pid.key == a.key and a.val[0] >= pid.val }
+
+    #accepted <~ accept {|a| [@proposer, check_accept(a.val)]}
   end
 
   def check_accept(id_and_val)

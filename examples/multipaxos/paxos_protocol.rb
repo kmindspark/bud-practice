@@ -25,7 +25,10 @@ module PaxosProtocol
       table :highest_id_responded
 
       table :max_promise_id
-      table :max_promise_val
+      table :max_accept_val
+      scratch :existing_id
+      scratch :existing_val
+      scratch :cur_prep
 
       #now transferring ruby functionality to Bloom
       #lset :acceptors
