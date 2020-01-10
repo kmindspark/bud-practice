@@ -23,6 +23,12 @@ module PaxosProtocol
       table :agreeing_acceptors
       table :accept_sent
       table :highest_id_responded
+
+      table :max_promise_id
+      table :max_accept_val
+      scratch :existing_id
+      scratch :existing_val
+      scratch :cur_prep
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"
