@@ -23,6 +23,3 @@ module PaxosAcceptorModule
     max_accept_val <+ (accept * max_promise_id).pairs {|a, pid| [a.val[2], a.val[0]] if pid.key == a.val[2] and a.val[0] >= pid.val }
   end
 end
-
-#Non-monotone downstream of network
-#Chunks without non-monotone

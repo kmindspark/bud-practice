@@ -16,6 +16,7 @@ module PaxosProtocol
       table :clientlist
       table :learnerlist
       table :num_acceptors
+      table :all_acceptors
 
       table :propose_num
       table :slot_num

@@ -36,7 +36,6 @@ class PaxosAcceptor
     accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], a.val[1]]] if pid.key == a.val[2] and a.val[0] >= pid.val }
     max_accept_val <- (max_accept_val * accept * max_promise_id).combos {|mpv, a, pid| [mpv.key, mpv.val] if mpv.key == pid.key and pid.key == a.val[2] and a.val[0] >= pid.val }
     max_accept_val <+ (accept * max_promise_id).pairs {|a, pid| [a.val[2], a.val[0]] if pid.key == a.val[2] and a.val[0] >= pid.val }
-
   end
 
   def check_accept(id_and_val)
@@ -76,3 +75,9 @@ server = (ARGV.length == 2) ? ARGV[1] : PaxosProtocol::DEFAULT_PROPOSER_ADDR
 puts "Server address: #{server}"
 program = PaxosAcceptor.new(server, :stdin => $stdin)
 program.run_fg
+
+#Non-monotone downstream of network
+#Chunks without non-monotone
+#Counting till a threshold, use a table
+#Nesting a lattice within a tuple (sandbox)
+#Put in comments
