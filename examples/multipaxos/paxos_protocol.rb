@@ -15,7 +15,7 @@ module PaxosProtocol
       table :nodelist
       table :clientlist
       table :learnerlist
-      table :num_acceptors
+      scratch :num_acceptors
       table :all_acceptors
 
       table :propose_num
@@ -30,6 +30,8 @@ module PaxosProtocol
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
+
+      table :test_t
 
       #now transferring ruby functionality to Bloom
       #lset :acceptors

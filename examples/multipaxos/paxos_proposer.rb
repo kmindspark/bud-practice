@@ -32,8 +32,8 @@ class PaxosProposer
     learnerlist <= connect_learner { |c| [c.val]}
     
     nodelist <= connect { |c| [c.val] }
-    num_acceptors <- (connect * num_acceptors).pairs {|c, n| [n.key]}
-    num_acceptors <+ (connect * num_acceptors).pairs {|c, n| [n.key + 1]}
+    num_acceptors <= nodelist.group([], count(nodelist.key))
+    stdio <~ num_acceptors.inspected
 
     clientlist <= client_request {|c| [c.val[0]]}
 
@@ -61,16 +61,26 @@ class PaxosProposer
     advocate_val <- (highest_id_responded * promise).pairs {|a, p| [p.val[5], a.val] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
     advocate_val <+ (highest_id_responded * promise).pairs {|a, p| [p.val[5], p.val[4]] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
 
-    accept_sent <- (num_acceptors * agreeing_acceptors * promise * accept_sent).combos {|n, a, p, s| [[s.key, 0]] if (p.val[5] == a.key and a.key == s.key and p.val[1] and (a.val + 1)*2 > n.key and s.val == 0)}
-    accept_sent <+ (num_acceptors * agreeing_acceptors * promise * accept_sent).combos {|n, a, p, s| [[s.key, 1]] if (p.val[5] == a.key and a.key == s.key and p.val[1] and (a.val + 1)*2 > n.key and s.val == 0)}
+    accept_sent <- (num_acceptors * agreeing_acceptors * promise * accept_sent).combos {|n, a, p, s| [s.key, 0] if (p.val[5] == a.key and a.key == s.key and p.val[1] and (a.val + 1)*2 > n.key and s.val == 0)}
+    accept_sent <+ (num_acceptors * agreeing_acceptors * promise * accept_sent).combos {|n, a, p, s| [s.key, 1] if (p.val[5] == a.key and a.key == s.key and p.val[1] and (a.val + 1)*2 > n.key and s.val == 0)}
+
+    test_t <= num_acceptors {|p| [1, 1] if ding(p.key)}
+
+    #stdio <~ agreeing_acceptors.inspected
 
     majority <= (num_acceptors * agreeing_acceptors * promise * accept_sent).combos {|n, a, p, s| [p.val[5], p.val[0]] if (p.val[5] == a.key and a.key == s.key and p.val[1] and (a.val + 1)*2 > n.key and s.val == 0)}
+    #majority_for_slot <= (promise * majority) {|p, m| [m.key, m.val] if m.key == p.val[5]}
 
     accept <~ (majority * nodelist * advocate_val).combos {|m, n, a| [n.key, [m.val, a.val, m.key]] if a.key == m.key}
     accepted_to_client <~ (accepted * clientlist).pairs {|a, c| [c.key, a.val]}
 
     accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]} 
-    stdio <~ accepted.inspected
+    #stdio <~ majority.inspected
+  end
+
+  def ding(val)
+    puts val
+    return val
   end
 
   def test_print(val)

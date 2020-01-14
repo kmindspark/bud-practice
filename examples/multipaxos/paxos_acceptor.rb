@@ -32,6 +32,8 @@ class PaxosAcceptor
     promise <~ (prepare * max_promise_id * existing_val).combos {|p, mp, ma| [@proposer, [p.val[0], p.val[0] > mpi.val, false, mp.val, 0, p.val[1]]] if p.val[1] == mp.key}
     promise <~ (prepare * existing_id * existing_val).combos {|p, mp, ma| [@proposer, [p.val[0], true, false, 0, 0, p.val[1]]] if p.val[1] == ma.key}
 
+    stdio <~ accept.inspected
+
     accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], a.val[1]]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
     accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], a.val[1]]] if pid.key == a.val[2] and a.val[0] >= pid.val }
     max_accept_val <- (max_accept_val * accept * max_promise_id).combos {|mpv, a, pid| [mpv.key, mpv.val] if mpv.key == pid.key and pid.key == a.val[2] and a.val[0] >= pid.val }
