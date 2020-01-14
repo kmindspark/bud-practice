@@ -37,6 +37,11 @@ class PaxosProposer
 
     clientlist <= client_request {|c| [c.val[0]]}
 
+    #A Proposer creates a message, which we call a "Prepare", identified with a number n. 
+    #Note that n is not the value to be proposed and maybe agreed on, but just a number which uniquely identifies this initial message by the proposer (to be sent to the acceptors). 
+    #The number n must be greater than any number used in any of the previous Prepare messages by this Proposer. Then, it sends the Prepare message containing n to a Quorum of Acceptors. 
+    #Note that the Prepare message only contains the number n (that is, it does not have to contain e.g. the proposed value, often denoted by v). The Proposer decides who is in the Quorum.
+    #A Proposer should not initiate Paxos if it cannot communicate with at least a Quorum of Acceptors.
     propose_num <- (propose_num * client_request).pairs {|p, c| [p.key]}
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
 

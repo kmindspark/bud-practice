@@ -15,12 +15,13 @@ module PaxosProtocol
       table :nodelist
       table :clientlist
       table :learnerlist
-      table :num_acceptors
+      scratch :num_acceptors
+      table :all_acceptors
 
       table :propose_num
       table :slot_num
       table :advocate_val
-      table :agreeing_acceptors
+      table :agreeing_acceptors, [:key, :val] => [:idk]
       table :accept_sent
       table :highest_id_responded
 
@@ -29,6 +30,8 @@ module PaxosProtocol
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
+      scratch :agreeing_acceptors_for_slot
+      scratch :agreeing_acceptor_size
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"
