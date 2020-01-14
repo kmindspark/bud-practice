@@ -33,8 +33,6 @@ class PaxosProposer
     
     nodelist <= connect { |c| [c.val] }
     num_acceptors <= nodelist.group([], count(nodelist.key))
-    #stdio <~ num_acceptors.inspected
-
     clientlist <= client_request {|c| [c.val[0]]}
 
     #A Proposer creates a message, which we call a "Prepare", identified with a number n. 
@@ -46,7 +44,6 @@ class PaxosProposer
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
 
     accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
-    #agreeing_acceptors <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
     highest_id_responded <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
     advocate_val <+ (client_request * slot_num).pairs {|c, s| [s.key, c.val[3]]}
 
@@ -55,10 +52,18 @@ class PaxosProposer
     
     client_request_temp <= (client_request * propose_num * slot_num).combos {|c, p, s| [p.key*10 + $proposer_id, s.key]}
 
+    #Send prepare message (after all the preparation)
     prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
 
+    #Receive promise from acceptor
     agreeing_acceptors <= promise {|p| [p.val[5], p.val[6], -1] if p.val[1]}
 
+    #If a Proposer receives a majority of Promises from a Quorum of Acceptors, it needs to set a value v to its proposal. 
+    #If any Acceptors had previously accepted any proposal, then they'll have sent their values to the Proposer, who now must set the value of its proposal, v, 
+    #to the value associated with the highest proposal number reported by the Acceptors, let's call it z. If none of the Acceptors had accepted a proposal up to this 
+    #point, then the Proposer may choose the value it originally wanted to propose, say x[17]. The Proposer sends an Accept message, (n, v), to a Quorum of Acceptors 
+    #with the chosen value for its proposal, v, and the proposal number n (which is the same as the number contained in the Prepare message previously sent to the Acceptors).
+    #So, the Accept message is either (n, v=z) or, in case none of the Acceptors previously accepted a value, (n, v=x).
     highest_id_responded <- (highest_id_responded * promise).pairs {|a, p| [p.val[5], a.val] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
     highest_id_responded <+ (highest_id_responded * promise).pairs {|a, p| [p.val[5], p.val[3]] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
 
@@ -71,13 +76,10 @@ class PaxosProposer
     accept_sent <- (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [s.key, 0] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
     accept_sent <+ (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [s.key, 1] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
 
-    #stdio <~ agreeing_acceptors.inspected
-
     majority <= (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [p.val[5], p.val[0]] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
-    #majority_for_slot <= (promise * majority) {|p, m| [m.key, m.val] if m.key == p.val[5]}
 
+    #Send accept message to acceptors
     accept <~ (majority * nodelist * advocate_val).combos {|m, n, a| [n.key, [m.val, a.val, m.key]] if a.key == m.key}
-    #accepted_to_client <~ (accepted * clientlist).pairs {|a, c| [c.key, a.val]}
 
     accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, ding(n.key))]} 
     stdio <~ accepted.inspected
