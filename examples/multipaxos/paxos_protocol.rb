@@ -21,7 +21,7 @@ module PaxosProtocol
       table :propose_num
       table :slot_num
       table :advocate_val
-      table :agreeing_acceptors
+      table :agreeing_acceptors, [:key, :val] => [:idk]
       table :accept_sent
       table :highest_id_responded
 
@@ -30,8 +30,8 @@ module PaxosProtocol
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
-
-      table :test_t
+      scratch :agreeing_acceptors_for_slot
+      scratch :agreeing_acceptor_size
 
       #now transferring ruby functionality to Bloom
       #lset :acceptors

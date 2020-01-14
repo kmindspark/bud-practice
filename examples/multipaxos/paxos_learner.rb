@@ -21,8 +21,9 @@ class PaxosLearner
   end
 
   bloom do
-    promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
-    accepted <~ accept {|a| [@proposer, check_accept(a.val)]}    
+    #promise <~ prepare {|p| [@proposer, check_nums(p.val)]}
+    #accepted <~ accept {|a| [@proposer, check_accept(a.val)]} 
+    stdio <~ accepted_to_learner.inspected
     stdio <~ accepted_to_learner{|a| [process_print(a.val)]}
   end
   
