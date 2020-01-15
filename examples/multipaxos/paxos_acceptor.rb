@@ -29,14 +29,14 @@ class PaxosAcceptor
     existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
     existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
     
-    max_promise_id <- (max_promise_id * prepare).pairs {|pid, p| [pid.key, pid.val] if p.val[1] == pid.key}
-    max_promise_id <+ (prepare * max_promise_id).pairs {|p, pid| [p.val[1], p.val[0]] if p.val[1] == pid.key and p.val[0] > pid.val }
-    max_promise_id <+ (prepare * existing_id).pairs {|p, eid| [p.val[1], p.val[0]] }
+    max_promise_id <- (max_promise_id * prepare).pairs {|pid, p| [pid.key, pid.val] if p.val[1] == pid.key and p.val[0] > pid.val}
+    max_promise_id <+ (prepare * max_promise_id).pairs {|p, pid| [p.val[1], p.val[0]] if p.val[1] == pid.key and p.val[0] > pid.val}
+    max_promise_id <+ (prepare * existing_id).pairs {|p, eid| [p.val[1], p.val[0]]}
 
     promise <~ (prepare * max_promise_id * max_accept_val).combos {|p, mp, ma| [@proposer, [p.val[0], p.val[0] > mpi.val, ma.val > 0, mp.val, ma.val, p.val[1], ip_port]] if mp.key == ma.key and p.val[1] == mp.key and p.val[0] > mp.val}
     promise <~ (prepare * max_promise_id * existing_val).combos {|p, mp, ma| [@proposer, [p.val[0], p.val[0] > mpi.val, false, mp.val, 0, p.val[1], ip_port]] if p.val[1] == mp.key}
     promise <~ (prepare * existing_id * existing_val).combos {|p, mp, ma| [@proposer, [p.val[0], true, false, 0, 0, p.val[1], ip_port]] if p.val[1] == ma.key}
-
+    #ensure that both are not populated at the same time, why mutually exclusive, enforce
 
     #If an Acceptor receives an Accept message, (n, v), from a Proposer, it must accept it if and only if it has not already promised (in Phase 1b of the Paxos protocol) to only consider proposals having an identifier greater than n.
     #If the Acceptor has not already promised (in Phase 1b) to only consider proposals having an identifier greater than n, it should register the value v (of the just received Accept message) as the accepted value (of the Protocol), 

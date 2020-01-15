@@ -1,7 +1,8 @@
 module PaxosProtocol
+    #Use schemas
     state do
       channel :connect
-      channel :client_request
+      channel :client_request #destination
       channel :prepare
       channel :promise
       channel :accept
