@@ -46,8 +46,7 @@ class PaxosProposer
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
 
     accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
-    highest_id_responded <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
-    advocate_val <+ (client_request * slot_num).pairs {|c, s| [s.key, c.val[3]]}
+    all_advocate_val <+ (client_request * slot_num * propose_num).pairs {|c, s, p| [s.key, c.val[3], p.key + 1]}
 
     slot_num <- (slot_num * client_request).pairs {|p, c| [p.key]}
     slot_num <+ (slot_num * client_request).pairs {|p, c| [p.key + 1]}
@@ -68,28 +67,25 @@ class PaxosProposer
     #point, then the Proposer may choose the value it originally wanted to propose, say x[17]. The Proposer sends an Accept message, (n, v), to a Quorum of Acceptors 
     #with the chosen value for its proposal, v, and the proposal number n (which is the same as the number contained in the Prepare message previously sent to the Acceptors).
     #So, the Accept message is either (n, v=z) or, in case none of the Acceptors previously accepted a value, (n, v=x).
-    highest_id_responded <- (highest_id_responded * promise).pairs {|a, p| [p.val[5], a.val] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
-    highest_id_responded <+ (highest_id_responded * promise).pairs {|a, p| [p.val[5], p.val[3]] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
-    #use aggregation here
 
-    advocate_val <- (highest_id_responded * promise).pairs {|a, p| [p.val[5], a.val] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
-    advocate_val <+ (highest_id_responded * promise).pairs {|a, p| [p.val[5], p.val[4]] if (p.val[5] == a.key and p.val[1] and p.val[2] and p.val[3] > a.val)}
+    all_advocate_val <= promise {|p| [p.val[5], p.val[3], p.val[4]] if p.val[1] and p.val[2]}
+    max_advocate_val <= all_advocate_val.group([all_advocate_val.slot, all_advocate_val.id], max(all_advocate_val.val))
 
     agreeing_acceptors_for_slot <= (agreeing_acceptors * promise).pairs {|a, p| [a.val] if a.key == p.val[5]}
     agreeing_acceptor_size <= agreeing_acceptors_for_slot.group([], count(agreeing_acceptors_for_slot.key))
 
-    accept_sent <- (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [s.key, 0] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
-    accept_sent <+ (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [s.key, 1] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
+    accept_sent <= (num_acceptors * agreeing_acceptor_size * promise).combos {|n, a, p| [p.val[6].to_s+p.val[5].to_s, p.val[5], p.val[6]] if (p.val[1] and (a.key + 1)*2 > n.key)}
+    stdio <~ promise.inspected
+    stdio <~ agreeing_acceptor_size.inspected
+    sent_for_slot <= accept_sent.group([accept_sent.key], count(accept_sent.val))
     #do a group with a scratch
 
-    majority <= (num_acceptors * agreeing_acceptor_size * promise * accept_sent).combos {|n, a, p, s| [p.val[5], p.val[0]] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 0)}
+    majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos {|n, a, p, s| [p.val[5], p.val[0]] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 1)}
 
     #Send accept message to acceptors
-    accept <~ (majority * nodelist * advocate_val).combos {|m, n, a| [n.key, [m.val, a.val, m.key]] if a.key == m.key}
+    accept <~ (majority * nodelist * max_advocate_val).combos {|m, n, a| [n.key, [m.val, a.val, m.key]] if a.slot == m.key}
 
-    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, ding(n.key))]} 
-    stdio <~ accepted.inspected
-    stdio <~ learnerlist.inspected
+    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, ding(n.key))]}
   end
 
   def ding(val)

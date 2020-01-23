@@ -1,7 +1,7 @@
 module PaxosProtocol
     state do
       channel :connect
-      channel :client_request
+      channel :client_request #destination
       channel :prepare
       channel :promise
       channel :accept
@@ -25,13 +25,19 @@ module PaxosProtocol
       table :accept_sent
       table :highest_id_responded
 
-      table :max_promise_id
-      table :max_accept_val
+      table :all_promise_id
+      scratch :max_promise_id
+      table :all_accept_val, [:slot, :id] => [:val]
+      scratch :max_accept_val, [:key, :val] => [:id]
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
       scratch :agreeing_acceptors_for_slot
       scratch :agreeing_acceptor_size
+      
+      #now transferring ruby functionality to Bloom
+      #lset :acceptors
+      #lmax :num_acceptors
     end
   
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"

@@ -21,13 +21,19 @@ module PaxosProtocol
 
       table :propose_num
       table :slot_num
-      table :advocate_val
       table :agreeing_acceptors, [:key, :val] => [:idk]
-      table :accept_sent
-      table :highest_id_responded
+      
+      table :accept_sent, [:idk] => [:key, :val]
+      scratch :sent_for_slot
 
-      table :max_promise_id
-      table :max_accept_val
+      table :all_advocate_val, [:slot, :id] => [:val]
+      scratch :max_advocate_val, [:slot, :val] => [:id]
+
+      table :all_promise_id
+      scratch :max_promise_id
+      table :all_accept_val, [:slot, :id] => [:val]
+      scratch :max_accept_val, [:key, :val] => [:id]
+    
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
