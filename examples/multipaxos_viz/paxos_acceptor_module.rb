@@ -14,8 +14,10 @@ module PaxosAcceptorModule
     existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
     existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
     
-    all_promise_id <= prepare {|p| [p.val[1], p.val[0]]}
+    all_promise_id <+ prepare {|p| [p.val[1], p.val[0]]}
     max_promise_id <= all_promise_id.group([all_promise_id.key], max(all_promise_id.val))
+
+    #stdio <~ max_promise_id.inspected
 
     #max_promise_id <- (max_promise_id * prepare).pairs {|pid, p| [pid.key, pid.val] if p.val[1] == pid.key and p.val[0] > pid.val}
     #max_promise_id <+ (prepare * max_promise_id).pairs {|p, pid| [p.val[1], p.val[0]] if p.val[1] == pid.key and p.val[0] > pid.val}
