@@ -4,7 +4,7 @@ module PaxosProtocol
       channel :connect
       channel :client_request #destination
       channel :prepare
-      channel :promise
+      channel :promise, [:@addr, :id, :valid, :have_prev_val, :max_prev_id, :max_prev_val, :slot, :ip]
       channel :accept
       channel :accepted
       scratch :majority
@@ -27,7 +27,7 @@ module PaxosProtocol
       scratch :sent_for_slot
 
       table :all_advocate_val, [:slot, :id] => [:val]
-      scratch :max_advocate_val, [:slot, :val] => [:id]
+      scratch :max_advocate_val, [:slot, :id] => [:val]
 
       table :all_promise_id
       scratch :max_promise_id

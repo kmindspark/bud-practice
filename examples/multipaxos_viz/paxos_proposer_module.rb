@@ -17,7 +17,7 @@ module PaxosProposerModule
     propose_num <- (propose_num * client_request).pairs {|p, c| [p.key]}
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
 
-    accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
+    #accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
     all_advocate_val <+ (client_request * slot_num * propose_num).pairs {|c, s, p| [s.key, c.val[3], p.key + 1]}
 
     slot_num <- (slot_num * client_request).pairs {|p, c| [p.key]}
@@ -30,7 +30,7 @@ module PaxosProposerModule
     prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
 
     #Receive promise from acceptor
-    agreeing_acceptors <= promise {|p| [p.val[5], p.val[6], -1] if p.val[1]}
+    agreeing_acceptors <= promise {|p| [p.slot, p.ip, -1] if p.valid}
     #handle timeouts
 
     #If a Proposer receives a majority of Promises from a Quorum of Acceptors, it needs to set a value v to its proposal. 
@@ -40,23 +40,24 @@ module PaxosProposerModule
     #with the chosen value for its proposal, v, and the proposal number n (which is the same as the number contained in the Prepare message previously sent to the Acceptors).
     #So, the Accept message is either (n, v=z) or, in case none of the Acceptors previously accepted a value, (n, v=x).
 
-    all_advocate_val <= promise {|p| [p.val[5], p.val[3], p.val[4]] if p.val[1] and p.val[2]}
+    all_advocate_val <= promise {|p| [p.slot, p.max_prev_id, p.max_prev_val] if p.valid and p.have_prev_val}
     max_advocate_val <= all_advocate_val.group([all_advocate_val.slot, all_advocate_val.id], max(all_advocate_val.val))
 
-    agreeing_acceptors_for_slot <= (agreeing_acceptors * promise).pairs {|a, p| [a.val] if a.key == p.val[5]}
+    agreeing_acceptors_for_slot <= (agreeing_acceptors * promise).pairs(:key=>:slot) {|a, p| [a.val]}
     agreeing_acceptor_size <= agreeing_acceptors_for_slot.group([], count(agreeing_acceptors_for_slot.key))
 
-    accept_sent <= (num_acceptors * agreeing_acceptor_size * promise).combos {|n, a, p| [p.val[6].to_s+p.val[5].to_s, p.val[5], p.val[6]] if (p.val[1] and (a.key + 1)*2 > n.key)}
-    stdio <~ promise.inspected
-    stdio <~ agreeing_acceptor_size.inspected
+    accept_sent <= (num_acceptors * agreeing_acceptor_size * promise).combos {|n, a, p| [p.ip.to_s+p.slot.to_s, p.slot, p.ip] if (p.valid and (a.key + 1)*2 > n.key)}
     sent_for_slot <= accept_sent.group([accept_sent.key], count(accept_sent.val))
     #do a group with a scratch
 
-    majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos {|n, a, p, s| [p.val[5], p.val[0]] if (p.val[5] == s.key and p.val[1] and (a.key + 1)*2 > n.key and s.val == 1)}
+    stdio <~ accept_sent.inspected
+    stdio <~ sent_for_slot.inspected
+
+    majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos(promise.slot => sent_for_slot.key) {|n, a, p, s| [p.slot, p.id] if (p.valid and (a.key + 1)*2 > n.key and s.val == 1)}
 
     #Send accept message to acceptors
-    accept <~ (majority * nodelist * max_advocate_val).combos {|m, n, a| [n.key, [m.val, a.val, m.key]] if a.slot == m.key}
+    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key]]}
 
-    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, ding(n.key))]}
+    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
   end
 end
