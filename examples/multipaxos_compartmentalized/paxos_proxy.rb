@@ -35,7 +35,7 @@ class PaxosProposer
     acceptors_group_zero <= nodelist {|n| [n.key] if n.val == 0}
     num_acceptors <= acceptors_group_zero.group([], count(acceptors_group_zero.key))
 
-    all_advocate_val <+ (prepare_to_proxy).pairs {|c| [p.val[1], p.val[2], p.val[0]]} #slot, val to advocate, id
+    all_advocate_val <+ prepare_to_proxy {|p| [p.val[1], p.val[0], p.val[2]]} #slot, val to advocate, id
 
     prepare <~ (prepare_to_proxy * nodelist).pairs {|p, n| [n.key, [p.val[0], p.val[1], ip_port]] if p.val[1] % 3 == n.val}
 
@@ -70,7 +70,7 @@ class PaxosProposer
     stdio <~ max_advocate_val.inspected
 
     #Send accept message to acceptors
-    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key, ip_port]] if test_print("IM HERE") and a.slot % 3 == n.group_num}
+    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key, ip_port]] if test_print("IM HERE") and a.slot % 3 == n.val}
 
     accepted_to_proposer <~ (accepted * num_acceptors).combos {|a, n| [PaxosProtocol::DEFAULT_PROPOSER_ADDR, append_info_for_learner(a.val, n.key)]}
   end

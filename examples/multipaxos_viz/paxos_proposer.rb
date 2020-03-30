@@ -6,8 +6,6 @@ require_relative 'paxos_protocol'
 class PaxosProposer
   include Bud
   include PaxosProtocol
-  include PaxosProposerModule
-  $total_acceptors = 0
   $propose_number = 0
   $slot_number = 0
   $advocate_map = {}
@@ -24,19 +22,19 @@ class PaxosProposer
     super opts
   end
 
-  def test_print(val)
+  def ding(val)
     puts val
-  end
-
-  def append_info_for_learner(val)
-    val.push($total_acceptors)
     return val
   end
 
-  def register_new_acceptor()
-    $total_acceptors = $total_acceptors + 1
-    puts "Total acceptors: " + $total_acceptors.to_s
+  def test_print(val)
+    puts val
     return true
+  end
+
+  def append_info_for_learner(val, val2)
+    val.push(val2)
+    return val
   end
 
   def get_new_num(advocate)
@@ -47,7 +45,7 @@ class PaxosProposer
     $transaction_in_progress[$slot_number + 1] = 1
     $agreeing_acceptors[$slot_number] = 0
     $propose_number = $propose_number + 1
-    $advocate_val[$slot_number] = advocate.to_i
+    $advocate_val[$slot_number] = advocate
     $accept_sent[$slot_number] = false
     return $propose_number*10 + $proposer_id
   end
@@ -59,7 +57,7 @@ class PaxosProposer
     $transaction_in_progress = 0
   end
 
-  def process_promise(promise_val)
+  def process_promise(promise_val, total_acceptors)
     puts promise_val
     slot_number = promise_val[5]
     if promise_val[1] == false
@@ -72,10 +70,10 @@ class PaxosProposer
       end
       puts "PRINTING"
       puts $agreeing_acceptors[slot_number]
-      puts $total_acceptors
-      puts $agreeing_acceptors[slot_number] - $total_acceptors/2
+      puts total_acceptors
+      puts $agreeing_acceptors[slot_number] - total_acceptors/2
       
-      if $agreeing_acceptors[slot_number] > $total_acceptors/2 and !$accept_sent[slot_number]
+      if $agreeing_acceptors[slot_number] > total_acceptors/2 and !$accept_sent[slot_number]
         $accept_sent[slot_number] = true
         return true
       end

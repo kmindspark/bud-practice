@@ -27,7 +27,7 @@ module PaxosProtocol
       scratch :sent_for_slot
 
       table :all_advocate_val, [:slot, :id] => [:val]
-      scratch :max_advocate_val, [:slot, :id] => [:val]
+      scratch :max_advocate_val, [:slot, :val] => [:id]
 
       table :all_promise_id
       scratch :max_promise_id

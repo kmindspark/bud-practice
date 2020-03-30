@@ -5,7 +5,7 @@ class GraphGen #:nodoc: all
   attr_reader :nodes
 
   def initialize(tableinfo, builtin_tables, cycle, name, budtime, collapse=false, cardinalities={}, pathsto={}, begins={})
-    puts "new version"
+    puts "nv2"
     @graph = GraphViz.new(:G, :type => :digraph, :label => "")
     #@graph.dim =  2
     @graph.node[:fontname] = "Times-Roman"
@@ -242,7 +242,6 @@ class GraphGen #:nodoc: all
 
     if output.nil?
       @graph.output(:svg => @name)
-      @graph.output(:dot => @name)
     else
       @graph.output(output.to_sym => @name)
     end
@@ -330,9 +329,7 @@ class SpaceTime
       @g.add_edges(v[0], v[1], :label => lbl, :color => "red", :weight => 1)
     end
     if fmt.nil?
-      puts "Hello"
       @g.output(:svg => "#{file}.svg")
-      @g.output(:dot => "#{file}.dot")
     else
       eval("@g.output(:#{fmt} => \"\#{file}.#{fmt}\")")
     end

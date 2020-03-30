@@ -6,11 +6,12 @@ require_relative 'paxos_protocol'
 class PaxosAcceptor
   include Bud
   include PaxosProtocol
-  include PaxosAcceptorModule
   $max_promise_id = {}
   $max_accept_val = {}
+  $group = -1
 
-  def initialize(proposer, opts={})
+  def initialize(group, proposer, opts={})
+    $group = group
     @proposer = proposer
     super opts
   end
@@ -33,6 +34,8 @@ class PaxosAcceptor
     cur_slot = new_id[1]
     new_id = new_id[0]
     return_arr = [new_id, true, false, $max_promise_id[cur_slot] || 0, $max_accept_val[cur_slot] || 0, cur_slot]
+    puts cur_slot
+    puts new_id
     if new_id > ($max_promise_id[cur_slot] || 0)
         $max_promise_id[cur_slot] = new_id
         if ($max_accept_val[cur_slot] || 0) > 0
@@ -46,7 +49,14 @@ class PaxosAcceptor
 end
 
 # ruby command-line wrangling
+group_num = ARGV[0].to_i
 server = (ARGV.length == 2) ? ARGV[1] : PaxosProtocol::DEFAULT_PROPOSER_ADDR
 puts "Server address: #{server}"
-program = PaxosAcceptor.new(server, :stdin => $stdin)
+program = PaxosAcceptor.new(group_num, server, :stdin => $stdin)
 program.run_fg
+
+#Non-monotone downstream of network
+#Chunks without non-monotone
+#Counting till a threshold, use a table
+#Nesting a lattice within a tuple (sandbox)
+#Put in comments

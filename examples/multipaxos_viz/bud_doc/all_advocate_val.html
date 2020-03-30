@@ -2,13 +2,11 @@
 <head><link rel="stylesheet" type="text/css" href="style.css" /></head><body>
 <pre class="code">
 
-<span class="comment"># RULE 49</span>
+<span class="comment"># RULE 58</span>
  
-<span class="comment"># RULE 43</span>
+<span class="comment"># RULE 55</span>
  
-<span class="ident">all_advocate_val</span> <span class="punct">&lt;</span> <span class="punct">(+((</span><span class="ident">client_request</span> <span class="punct">*</span> <span class="ident">slot_num</span><span class="punct">)</span> <span class="punct">*</span> <span class="ident">propose_num</span><span class="punct">).</span><span class="ident">pairs</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">c</span><span class="punct">,</span> <span class="ident">s</span><span class="punct">,</span> <span class="ident">p</span><span class="punct">|</span>
-  <span class="punct">[</span><span class="ident">s</span><span class="punct">.</span><span class="ident">key</span><span class="punct">,</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">val</span><span class="punct">[</span><span class="number">3</span><span class="punct">],</span> <span class="punct">(</span><span class="ident">p</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">+</span> <span class="number">1</span><span class="punct">)]</span>
-<span class="keyword">end</span><span class="punct">)</span>
+<span class="ident">all_advocate_val</span> <span class="punct">&lt;</span> <span class="punct">(+</span><span class="ident">prepare_to_proxy</span> <span class="punct">{</span> <span class="punct">|</span><span class="ident">p</span><span class="punct">|</span> <span class="punct">[</span><span class="ident">p</span><span class="punct">.</span><span class="ident">val</span><span class="punct">[</span><span class="number">1</span><span class="punct">],</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">val</span><span class="punct">[</span><span class="number">0</span><span class="punct">],</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">val</span><span class="punct">[</span><span class="number">2</span><span class="punct">]]</span> <span class="punct">})</span>
 <span class="ident">all_advocate_val</span> <span class="punct">&lt;=</span> <span class="punct">(</span><span class="ident">promise</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">p</span><span class="punct">|</span>
   <span class="punct">[</span><span class="ident">p</span><span class="punct">.</span><span class="ident">slot</span><span class="punct">,</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">max_prev_id</span><span class="punct">,</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">max_prev_val</span><span class="punct">]</span> <span class="keyword">if</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">valid</span> <span class="keyword">and</span> <span class="ident">p</span><span class="punct">.</span><span class="ident">have_prev_val</span>
 <span class="keyword">end</span><span class="punct">)</span></pre>
