@@ -1,0 +1,64 @@
+/** Main program */
+void main(){
+    List<Map> allMaps = new List<Map>
+    // A very basic, unoptimized O(R^2) algorithm
+    for (Rule r: allRulesInProgram()){
+        Map curMap = new Map()
+        parse(r, curMap)
+        allMaps.add(curMap)
+        absorbUnions(allMaps) //Remove all overlaps & redundancies
+    }
+    discardAllMapsSize1(allMaps)
+    return allMaps
+}
+
+Column colTransfer(Rule r, Column c){
+    //return the column to which column c on the RHS of r maps to
+}
+
+/* Helper method for start, recursive */
+void parse(Rule r, Map allNodes, Column colWithKey (default:r.lhs.keyCol)){
+    if (colTransfer(r, colWithKey) != r.lhs.keyCol && !r.isChannel() 
+        || r.lhs.nonMonotonic()){ //Added a non-monotonicity condition for things
+                                  //like slot_num to not be included
+        return
+    }
+    allNodes.add(r)
+    for (Rule child: allRulesContainingTableOnRHS(r.lhs)){
+        parse(child, colTransfer(colWithKey), allNodes)
+    }
+}
+
+boolean keysMatch(Map m1, Map m2){
+    //return whether m1 and m2 are talking about the same keys, given one is
+    //a subset of the other
+}
+
+/** If the last (most recent) element in the list contains overlap with existing
+ * sets of rules & key columns in the list, then merge.
+ */
+void absorbUnions(List<Map> list){
+    newElem = list.lastElement()
+    for (Map m: list.allButLast){
+        if (m.subsetOf(newElem) && keysMatch(m, newElem)){
+            list.remove(m)
+            list.add(newElem)
+        }
+        else if (newElem.subsetOf(m) && keysMatch(newElem, m)){
+            list.remove(newElem)
+        }
+    }
+}
+
+//Sorted Map, Could just be a list
+Map {
+    Rule -> Key Column Index
+}
+
+/** Notes
+ * 1) Any channels that are encountered and perpetuate the key-indexing
+ * can be used as a junction point to redirect flows of information.
+ * One example is having a different number of proxy leaders and acceptor groups.
+ * 
+ * 2) Message reordering/non-monotonicity at the box output area needs to be handled.
+ */

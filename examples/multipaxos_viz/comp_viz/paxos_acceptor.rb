@@ -8,8 +8,10 @@ class PaxosAcceptor
   include PaxosProtocol
   $max_promise_id = {}
   $max_accept_val = {}
+  $group = -1
 
-  def initialize(proposer, opts={})
+  def initialize(group, proposer, opts={})
+    $group = group
     @proposer = proposer
     super opts
   end
@@ -47,9 +49,10 @@ class PaxosAcceptor
 end
 
 # ruby command-line wrangling
+group_num = ARGV[0].to_i
 server = (ARGV.length == 2) ? ARGV[1] : PaxosProtocol::DEFAULT_PROPOSER_ADDR
 puts "Server address: #{server}"
-program = PaxosAcceptor.new(server, :stdin => $stdin)
+program = PaxosAcceptor.new(group_num, server, :stdin => $stdin)
 program.run_fg
 
 #Non-monotone downstream of network

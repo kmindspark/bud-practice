@@ -1,0 +1,37 @@
+void replicate_box(Map m){
+    m_new = new Module(m) //Module containing all rules from Map m
+    m_rest = m_old - m_new //Remaining module after box is cut out
+    m_rest.addTable('ip_addresses_of_boxes') //User populated, populated on startup
+
+    for (Rule r: crossingRules(m_rest, m_new)){
+        if (r.lhs.is_channel()){
+            continue
+        }
+        if (r.lhs.is_scratch()){
+            // Also splice
+            r.lhs.changeType(channel) //Change type of destination tables on crossing edges to channels
+        }
+        else if (r.lhs.is_table()){
+            r, r2 = splice(r) //Need the channel to cross modules, but table to hold values permanently
+        }
+        
+        if (r.lhs.in(m_new)){ //Channel into m_new
+            r.rhs.addKeyCol(userDefinedDistribution('ip_addresses_of_boxes'))
+            r.rhs.addMessage(ip_port)
+            m_new.addRule(ip_address_storage <- r.rhs.ip_address)
+        }
+        else { //Channel out of m_new
+            assert r.lhs.in(m_rest)
+            r.rhs.addKeyCol(ip_address_storage)
+        }
+    }
+}
+
+void splice(r){
+    t = m_new.addTable('intermediate_' + r)
+    r.lhs.changeType(channel)
+    r2 = Rule(lhs=t, rhs=r.lhs)
+
+    //Now take all rules that came out from r and make them come out from c
+    rewire(r, r2); //Implementation not shown because it doesn't exist :)
+}
