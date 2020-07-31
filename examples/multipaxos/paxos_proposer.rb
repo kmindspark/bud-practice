@@ -44,6 +44,7 @@ class PaxosProposer
     #Assumes only 1 channel per tick
     propose_num <- (propose_num * client_request).pairs {|p, c| [p.key]}
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
+    stdio <~ propose_num.inspected
 
     #accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
     all_advocate_val <+ (client_request * slot_num * propose_num).pairs {|c, s, p| [s.key, p.key*10 + $proposer_id, c.val[3]]}
