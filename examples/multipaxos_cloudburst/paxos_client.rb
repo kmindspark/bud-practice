@@ -26,6 +26,6 @@ proposer = ARGV[1]
 puts "Client"
 puts "Proposer address: #{proposer}"
 puts "IP Port address: #{ip}:#{port}"
-puts File.open("examples/multipaxos_cloudburst/in.txt")
-program = PaxosClient.new(proposer, :ip => ip, :port => port, :stdin => File.open("examples/multipaxos_cloudburst/in.txt"))
+puts File.open("/bud-practice/examples/multipaxos_cloudburst/in.txt")
+program = PaxosClient.new(proposer, :ip => ip, :port => port, :stdin => File.open("/bud-practice/examples/multipaxos_cloudburst/in.txt"))
 program.run_fg
