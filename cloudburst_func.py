@@ -29,7 +29,7 @@ def proposer(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
 
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_proposer.rb", 0, user_lib.get('proposer_ip') + ":12345", user_lib.get('acceptor_ip') + ":12346"])
+    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_proposer.rb", "0", user_lib.get('proposer_ip') + ":12345", user_lib.get('acceptor_ip') + ":12346"])
     return 100
 
 def acceptor(user_lib, a):
@@ -39,19 +39,15 @@ def acceptor(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(5)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", user_lib.get('acceptor_ip') + ":12346", user_lib.get('proposer_ip') + ":12345"])
+    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", user_lib.get('acceptor_ip') + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
     return 100
 
 parser = argparse.ArgumentParser(description='Set nums of each.')
-parser.add_argument("c", help="number of proposers to use",
-                    type=int)
-parser.add_argument("p", help="number of proposers to use",
-                    type=int)
-parser.add_argument("a", help="number of proposers to use",
-                    type=int)
+parser.add_argument("c", help="number of proposers to use", type=int)
+parser.add_argument("p", help="number of proposers to use", type=int)
+parser.add_argument("a", help="number of proposers to use", type=int)
 
 args = parser.parse_args()
-
 
 cloud_client = cloudburst.register(client, 'client')
 cloud_proposer = cloudburst.register(proposer, 'proposer')
@@ -68,4 +64,12 @@ print(cloudburst.call_dag('dag2', { 'proposer': [2] }, direct_response=False))
 
 cloudburst.register_dag('dag3', ['acceptor'], [])
 print("Registered third dag")
-print(cloudburst.call_dag('dag3', { 'acceptor': [2] }, direct_response=False))
+print(cloudburst.call_dag('dag3', { 'acceptor': [1] }, direct_response=False))
+
+cloudburst.register_dag('dag4', ['acceptor'], [])
+print("Registered fourth dag")
+print(cloudburst.call_dag('dag4', { 'acceptor': [2] }, direct_response=False))
+
+cloudburst.register_dag('dag5', ['acceptor'], [])
+print("Registered fifth dag")
+print(cloudburst.call_dag('dag5', { 'acceptor': [3] }, direct_response=False))

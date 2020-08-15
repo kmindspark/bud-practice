@@ -59,7 +59,7 @@ class PaxosProposer
     client_request_temp <= (client_request * propose_num * slot_num).combos {|c, p, s| [p.key*10 + $proposer_id, s.key]}
 
     #Send prepare message (after all the preparation)
-    prepare <~ (client_request_temp * nodelist).pairs {|c, n| [$acceptor_addr, [c.key, c.val]]}
+    prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
 
     #Receive promise from acceptor
     agreeing_acceptors <= promise {|p| [p.slot, p.ip, -1] if p.valid}
@@ -88,7 +88,7 @@ class PaxosProposer
     majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos(promise.slot => sent_for_slot.key) {|n, a, p, s| [p.slot, p.id] if (p.valid and (a.key + 1)*2 > n.key and s.val == 1)}
 
     #Send accept message to acceptors
-    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [$acceptor_addr, [m.val, a.val, m.key]]}
+    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key]]}
 
     accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
   end

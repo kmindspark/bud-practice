@@ -22,7 +22,7 @@ class PaxosProposer
     super opts
   end
 
-  state do 
+  state do
     num_acceptors <+ [[0]]
     propose_num <+ [[1]]
     slot_num <+ [[0]]
@@ -35,9 +35,9 @@ class PaxosProposer
     num_acceptors <= nodelist.group([], count(nodelist.key))
     clientlist <= client_request {|c| [c.val[0]]}
 
-    #A Proposer creates a message, which we call a "Prepare", identified with a number n. 
-    #Note that n is not the value to be proposed and maybe agreed on, but just a number which uniquely identifies this initial message by the proposer (to be sent to the acceptors). 
-    #The number n must be greater than any number used in any of the previous Prepare messages by this Proposer. Then, it sends the Prepare message containing n to a Quorum of Acceptors. 
+    #A Proposer creates a message, which we call a "Prepare", identified with a number n.
+    #Note that n is not the value to be proposed and maybe agreed on, but just a number which uniquely identifies this initial message by the proposer (to be sent to the acceptors).
+    #The number n must be greater than any number used in any of the previous Prepare messages by this Proposer. Then, it sends the Prepare message containing n to a Quorum of Acceptors.
     #Note that the Prepare message only contains the number n (that is, it does not have to contain e.g. the proposed value, often denoted by v). The Proposer decides who is in the Quorum.
     #A Proposer should not initiate Paxos if it cannot communicate with at least a Quorum of Acceptors.
 
@@ -51,9 +51,9 @@ class PaxosProposer
 
     slot_num <- (slot_num * client_request).pairs {|p, c| [p.key]}
     slot_num <+ (slot_num * client_request).pairs {|p, c| [p.key + 1]}
-    
+
     #Assuming 10 > num proposers, this ensures that all IDs are unique
-    client_request_temp <= (client_request * propose_num * slot_num).combos {|c, p, s| [p.key*10 + $proposer_id, s.key]} 
+    client_request_temp <= (client_request * propose_num * slot_num).combos {|c, p, s| [p.key*10 + $proposer_id, s.key]}
 
     #Send prepare message (after all the preparation)
     prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
@@ -62,10 +62,10 @@ class PaxosProposer
     agreeing_acceptors <= promise {|p| [p.slot, p.ip, -1] if p.valid}
     #handle timeouts
 
-    #If a Proposer receives a majority of Promises from a Quorum of Acceptors, it needs to set a value v to its proposal. 
-    #If any Acceptors had previously accepted any proposal, then they'll have sent their values to the Proposer, who now must set the value of its proposal, v, 
-    #to the value associated with the highest proposal number reported by the Acceptors, let's call it z. If none of the Acceptors had accepted a proposal up to this 
-    #point, then the Proposer may choose the value it originally wanted to propose, say x[17]. The Proposer sends an Accept message, (n, v), to a Quorum of Acceptors 
+    #If a Proposer receives a majority of Promises from a Quorum of Acceptors, it needs to set a value v to its proposal.
+    #If any Acceptors had previously accepted any proposal, then they'll have sent their values to the Proposer, who now must set the value of its proposal, v,
+    #to the value associated with the highest proposal number reported by the Acceptors, let's call it z. If none of the Acceptors had accepted a proposal up to this
+    #point, then the Proposer may choose the value it originally wanted to propose, say x[17]. The Proposer sends an Accept message, (n, v), to a Quorum of Acceptors
     #with the chosen value for its proposal, v, and the proposal number n (which is the same as the number contained in the Prepare message previously sent to the Acceptors).
     #So, the Accept message is either (n, v=z) or, in case none of the Acceptors previously accepted a value, (n, v=x).
 
@@ -140,7 +140,7 @@ class PaxosProposer
       puts $agreeing_acceptors[slot_number]
       puts total_acceptors
       puts $agreeing_acceptors[slot_number] - total_acceptors/2
-      
+
       if $agreeing_acceptors[slot_number] > total_acceptors/2 and !$accept_sent[slot_number]
         $accept_sent[slot_number] = true
         return true
