@@ -5,8 +5,8 @@ import argparse
 
 
 local = False
-AWS_FUNCTION_ELB = 'a591fc1389d974046a76910d7644370e-176098095.us-east-1.elb.amazonaws.com'
-MY_IP = 'ec2-54-210-86-239'#'18.209.27.93'
+AWS_FUNCTION_ELB = 'a3f4c0309e4274ac085edcbb162563f7-1489260450.us-east-1.elb.amazonaws.com'
+MY_IP = 'ec2-100-26-151-200'#'18.209.27.93'
 
 from cloudburst.client.client import CloudburstConnection
 cloudburst = CloudburstConnection(AWS_FUNCTION_ELB, MY_IP, local=local)
@@ -73,28 +73,19 @@ cloud_client = cloudburst.register(client, 'client')
 cloud_proposer = cloudburst.register(proposer, 'proposer')
 
 for i in range(args.a):
-    cloud_acceptor_1 = cloudburst.register(acceptor_1, 'acceptor-1')
-    cloud_acceptor_2 = cloudburst.register(acceptor_2, 'acceptor-2')
-    cloud_acceptor_3 = cloudburst.register(acceptor_3, 'acceptor-3')
+    cloudburst.register(acceptor_1, 'acceptor-' + str(i))
 
-print("REGISTERED FUNCTIONS")
-
-cloudburst.register_dag('dag', ['client'], [])
+cloudburst.register_dag('dag1', ['client'], [])
 print("Registered first dag")
-print(cloudburst.call_dag('dag', { 'client': [2] }, direct_response=False))
+print(cloudburst.call_dag('dag1', { 'client': [2] }, direct_response=False))
 
 cloudburst.register_dag('dag2', ['proposer'], [])
 print("Registered second dag")
 print(cloudburst.call_dag('dag2', { 'proposer': [2] }, direct_response=False))
 
-cloudburst.register_dag('dag3', ['acceptor-1'], [])
-print("Registered third dag")
-print(cloudburst.call_dag('dag3', { 'acceptor-1': [1] }, direct_response=False))
-
-cloudburst.register_dag('dag4', ['acceptor-2'], [])
-print("Registered fourth dag")
-print(cloudburst.call_dag('dag4', { 'acceptor-2': [2] }, direct_response=False))
-
-cloudburst.register_dag('dag5', ['acceptor-3'], [])
-print("Registered fifth dag")
-print(cloudburst.call_dag('dag5', { 'acceptor-3': [3] }, direct_response=False))
+for i in range(args.a):
+    name = 'acceptor-' + str(i)
+    print(name)
+    cloudburst.register_dag('dag-' + name, [name], [])
+    print("Registered acceptor dag: ", i)
+    print(cloudburst.call_dag('dag-' + name, { name: [i] }, direct_response=False))

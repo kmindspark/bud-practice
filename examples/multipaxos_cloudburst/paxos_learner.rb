@@ -29,7 +29,8 @@ class PaxosLearner
 
   def process_print(val)
     puts "PRINTING"
-    puts val[3]
+    #puts val[3]
+    puts Time.now.to_f.round(5) - val[2].to_f
     $latest_num_acceptors = val[3]
     $number_of_yes[val[1]] = 1 + ($number_of_yes[val[1]] || 0)
     if $number_of_yes[val[1]] > $latest_num_acceptors/2
