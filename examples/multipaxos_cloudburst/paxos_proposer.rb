@@ -90,7 +90,7 @@ class PaxosProposer
     #Send accept message to acceptors
     accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key]]}
 
-    accepted_to_learner <~ (accepted * learnerlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
+    accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
   end
 
   def ding(val)

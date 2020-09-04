@@ -22,7 +22,7 @@ module PaxosProtocol
       table :propose_num
       table :slot_num
       table :agreeing_acceptors, [:key, :val] => [:idk]
-      
+
       table :accept_sent, [:idk] => [:key, :val]
       scratch :sent_for_slot
 
@@ -33,18 +33,20 @@ module PaxosProtocol
       scratch :max_promise_id
       table :all_accept_val, [:slot, :id] => [:val]
       scratch :max_accept_val, [:key, :val] => [:id]
-    
+
       scratch :existing_id
       scratch :existing_val
       scratch :cur_prep
       scratch :agreeing_acceptors_for_slot
       scratch :agreeing_acceptor_size
 
+      scratch :sink
+
       #now transferring ruby functionality to Bloom
       #lset :acceptors
       #lmax :num_acceptors
     end
-  
+
     DEFAULT_CLIENT_ADDR = "127.0.0.1:12345"
     DEFAULT_PROPOSER_ADDR = "127.0.0.1:12346"
     DEFAULT_ACCEPTOR_ADDR = "127.0.0.1:12347"
