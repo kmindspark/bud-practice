@@ -19,7 +19,7 @@ def client(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(10)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":12347", user_lib.get('proposer_ip') + ":12345"])
+    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345"])
     return 100
 
 def proposer(user_lib, a):
@@ -69,15 +69,18 @@ parser.add_argument("a", help="number of proposers to use", type=int)
 
 args = parser.parse_args()
 
-cloud_client = cloudburst.register(client, 'client')
+for i in range(args.c):
+    cloudburst.register(acceptor_1, 'client-' + str(i))
 cloud_proposer = cloudburst.register(proposer, 'proposer')
-
 for i in range(args.a):
     cloudburst.register(acceptor_1, 'acceptor-' + str(i))
 
-cloudburst.register_dag('dag1', ['client'], [])
-print("Registered first dag")
-print(cloudburst.call_dag('dag1', { 'client': [2] }, direct_response=False))
+for i in range(args.c):
+    name = 'client-' + str(i)
+    print(name)
+    cloudburst.register_dag('dag-' + name, [name], [])
+    print("Registered client dag: ", i)
+    print(cloudburst.call_dag('dag-' + name, { name: [i] }, direct_response=False))
 
 cloudburst.register_dag('dag2', ['proposer'], [])
 print("Registered second dag")
