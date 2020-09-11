@@ -9,6 +9,7 @@ class PaxosClient
 
   $number_of_yes = {}
   $entries_in_slots = {}
+  $last_time = 0
 
   def initialize(proposer, opts={})
     @proposer = proposer
@@ -17,16 +18,27 @@ class PaxosClient
 
   bloom do
     client_request <~ stdio do |s|
-        [@proposer, [ip_port, nil, Time.now.to_f.round(2), Time.now.to_f.round(5)]]
+        [@proposer, [ip_port, nil, Time.now.to_f.round(2), Time.now.to_f.round(5)] if process_time(0)]
     end
     #stdio <~ accepted_to_learner.inspected
     sink <= accepted_to_learner{|a| [process_print(a.val)]}
   end
 
+  def process_time(val)
+    count = 0
+    if ($last_time == 0)
+      $last_time = Time.now.to_f
+    end
+    while (Time.now.to_f - $last_time < 0.1)
+      count = count + 1
+    end
+    return true
+  end
+
   def process_print(val)
     #puts "PRINTING"
     #puts val[3]
-    puts Time.now.to_f.round(5) - val[2].to_f
+    puts String(val[2].to_f) + String(Time.now.to_f.round(5) - val[2].to_f)
     $latest_num_acceptors = val[3]
     $number_of_yes[val[1]] = 1 + ($number_of_yes[val[1]] || 0)
     if $number_of_yes[val[1]] > $latest_num_acceptors/2
