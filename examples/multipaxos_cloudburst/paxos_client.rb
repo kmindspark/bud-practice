@@ -29,7 +29,7 @@ class PaxosClient
     if ($last_time == 0)
       $last_time = Time.now.to_f
     end
-    while (Time.now.to_f - $last_time < 0.1)
+    while (Time.now.to_f - $last_time < 1.1)
       count = count + 1
     end
     return true
