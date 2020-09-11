@@ -5,8 +5,8 @@ import argparse
 
 
 local = False
-AWS_FUNCTION_ELB = 'ae4f3c34c9cae4fc481ff27a02758c29-1625619763.us-east-1.elb.amazonaws.com'
-MY_IP = 'ec2-52-21-79-112' #'18.209.27.93'
+AWS_FUNCTION_ELB = 'a0528f3739efd425d8b6f014a2cd5000-1401044895.us-east-1.elb.amazonaws.com'
+MY_IP = 'ec2-3-85-16-70' #'18.209.27.93'
 
 from cloudburst.client.client import CloudburstConnection
 cloudburst = CloudburstConnection(AWS_FUNCTION_ELB, MY_IP, local=local)
@@ -19,7 +19,9 @@ def client(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(10)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    time.sleep(40)
+    subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
 def proposer(user_lib, a):
@@ -29,7 +31,9 @@ def proposer(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
 
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_proposer.rb", "0", user_lib.get('proposer_ip') + ":12345", user_lib.get('acceptor_ip') + ":12346"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_proposer.rb", "0", user_lib.get('proposer_ip') + ":12345", user_lib.get('acceptor_ip') + ":12346"])
+    time.sleep(40)
+    subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
 def acceptor_1(user_lib, a):
@@ -39,7 +43,9 @@ def acceptor_1(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(5)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    time.sleep(40)
+    subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
 def acceptor_2(user_lib, a):
@@ -49,7 +55,9 @@ def acceptor_2(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(5)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    time.sleep(40)
+    subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
 def acceptor_3(user_lib, a):
@@ -59,7 +67,9 @@ def acceptor_3(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(5)
-    subprocess.call(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    time.sleep(40)
+    subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
 parser = argparse.ArgumentParser(description='Set nums of each.')
