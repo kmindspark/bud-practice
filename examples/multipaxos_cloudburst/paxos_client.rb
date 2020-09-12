@@ -11,8 +11,9 @@ class PaxosClient
   $entries_in_slots = {}
   $last_time = 0
 
-  def initialize(proposer, opts={})
+  def initialize(proposer, time_delay, opts={})
     @proposer = proposer
+    @time_delay = time_delay
     super opts
   end
 
@@ -53,10 +54,11 @@ end
 client_address = ARGV[0]
 ip, port = client_address.split(":")
 proposer = ARGV[1]
+time_delay = ARGV[2]
 puts "Client"
 puts "Proposer address: #{proposer}"
 puts "IP Port address: #{ip}:#{port}"
 #puts File.open("in.txt")#/bud-practice/examples/multipaxos_cloudburst/
-program = PaxosClient.new(proposer, :ip => ip, :port => port, :stdin => File.open("in.txt")) #/bud-practice/examples/multipaxos_cloudburst/
+program = PaxosClient.new(proposer, time_delay, :ip => ip, :port => port, :stdin => File.open("in.txt")) #/bud-practice/examples/multipaxos_cloudburst/
 program.run_fg
 
