@@ -60,6 +60,6 @@ puts "Client"
 puts "Proposer address: #{proposer}"
 puts "IP Port address: #{ip}:#{port}"
 #puts File.open("in.txt")#/bud-practice/examples/multipaxos_cloudburst/
-program = PaxosClient.new(proposer, time_delay, :ip => ip, :port => port, :stdin => File.open("in.txt")) #/bud-practice/examples/multipaxos_cloudburst/
+program = PaxosClient.new(proposer, time_delay, :ip => ip, :port => port, :stdin => File.open("/bud-practice/examples/multipaxos_cloudburst/in.txt")) #/bud-practice/examples/multipaxos_cloudburst/
 program.run_fg
 

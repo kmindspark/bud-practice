@@ -5,8 +5,8 @@ import argparse
 
 
 local = False
-AWS_FUNCTION_ELB = 'a664ca694341d4dd7b51e009b8e16edd-1176716584.us-east-1.elb.amazonaws.com'
-MY_IP = 'ec2-3-85-16-70' #'18.209.27.93'
+AWS_FUNCTION_ELB = 'a2f89388f80244f18a2ba8fe41489e1d-1907970223.us-east-1.elb.amazonaws.com'
+MY_IP = 'ec2-34-232-52-80' #'18.209.27.93'
 
 from cloudburst.client.client import CloudburstConnection
 cloudburst = CloudburstConnection(AWS_FUNCTION_ELB, MY_IP, local=local)
@@ -19,7 +19,7 @@ def client(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(10)
-    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345"])
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345", "1"])
     time.sleep(40)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
