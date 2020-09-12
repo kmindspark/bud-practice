@@ -13,7 +13,7 @@ class PaxosClient
 
   def initialize(proposer, time_delay, opts={})
     @proposer = proposer
-    @time_delay = time_delay
+    @time_delay = time_delay.to_f
     super opts
   end
 
@@ -30,10 +30,11 @@ class PaxosClient
     if ($last_time == 0)
       $last_time = Time.now.to_f
     end
-    while (Time.now.to_f - $last_time < 0.1)
+    while (Time.now.to_f - $last_time < @time_delay)
       count = count + 1
     end
     $last_time = Time.now.to_f
+    puts "sending..."
     return true
   end
 
