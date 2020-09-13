@@ -18,8 +18,8 @@ class PaxosClient
   end
 
   bloom do
-    client_request <~ stdio do |s|
-        [@proposer, [ip_port, nil, Time.now.to_f.round(2), Time.now.to_f.round(5)]] if process_time(0)
+    client_request <~ timer do |s|
+        [@proposer, [ip_port, nil, Time.now.to_f.round(2), Time.now.to_f.round(5)]]
     end
     #stdio <~ accepted_to_learner.inspected
     sink <= accepted_to_learner{|a| [process_print(a.val)]}

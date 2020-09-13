@@ -41,6 +41,8 @@ module PaxosProtocol
       scratch :agreeing_acceptor_size
 
       scratch :sink
+      periodic :timer, 0.1
+
 
       #now transferring ruby functionality to Bloom
       #lset :acceptors

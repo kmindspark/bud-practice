@@ -19,8 +19,8 @@ def client(user_lib, a):
     while (not (user_lib.get('proposer_ip') and user_lib.get('client_ip') and user_lib.get('acceptor_ip'))):
         time.sleep(1)
     time.sleep(10)
-    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345", "1"])
-    time.sleep(40)
+    p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_client.rb", user_lib.get('client_ip') + ":1235" + str(a), user_lib.get('proposer_ip') + ":12345", "10"])
+    time.sleep(400)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
@@ -32,7 +32,7 @@ def proposer(user_lib, a):
         time.sleep(1)
 
     p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_proposer.rb", "0", user_lib.get('proposer_ip') + ":12345", user_lib.get('acceptor_ip') + ":12346"])
-    time.sleep(40)
+    time.sleep(400)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
@@ -44,7 +44,7 @@ def acceptor_1(user_lib, a):
         time.sleep(1)
     time.sleep(5)
     p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
-    time.sleep(40)
+    time.sleep(400)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
@@ -56,7 +56,7 @@ def acceptor_2(user_lib, a):
         time.sleep(1)
     time.sleep(5)
     p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
-    time.sleep(40)
+    time.sleep(400)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
@@ -68,7 +68,7 @@ def acceptor_3(user_lib, a):
         time.sleep(1)
     time.sleep(5)
     p = subprocess.Popen(["ruby", "/bud-practice/examples/multipaxos_cloudburst/paxos_acceptor.rb", ip + ":1234" + str(a), user_lib.get('proposer_ip') + ":12345"])
-    time.sleep(40)
+    time.sleep(400)
     subprocess.call(['kill -9 ' + str(p.pid)], shell=True)
     return 100
 
