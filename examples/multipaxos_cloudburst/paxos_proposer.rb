@@ -47,7 +47,7 @@ class PaxosProposer
     #Assumes only 1 channel per tick
     propose_num <- (propose_num * client_request).pairs {|p, c| [p.key]}
     propose_num <+ (propose_num * client_request).pairs {|p, c| [p.key + 1]}
-    stdio <~ client_request.inspected
+    #stdio <~ client_request.inspected
 
     #accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
     all_advocate_val <+ (client_request * slot_num * propose_num).pairs {|c, s, p| [s.key, p.key*10 + $proposer_id, c.val[3]]}
@@ -82,8 +82,8 @@ class PaxosProposer
     sent_for_slot <= accept_sent.group([accept_sent.key], count(accept_sent.val))
     #do a group with a scratch
 
-    stdio <~ accept_sent.inspected
-    stdio <~ sent_for_slot.inspected
+    #stdio <~ accept_sent.inspected
+    #stdio <~ sent_for_slot.inspected
 
     majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos(promise.slot => sent_for_slot.key) {|n, a, p, s| [p.slot, p.id] if (p.valid and (a.key + 1)*2 > n.key and s.val == 1)}
 
