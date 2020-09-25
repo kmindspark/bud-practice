@@ -88,20 +88,9 @@ class PaxosProposer
     majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos(promise.slot => sent_for_slot.key) {|n, a, p, s| [p.slot, p.id] if (p.valid and (a.key + 1)*2 > n.key and s.val == 1)}
 
     #Send accept message to acceptors
-    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key, Time.now.to_f]]}#
+    accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key]]}
 
-    all_advocate_val <- (majority * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, a| [m.key]}
-    accept_sent <- (majority * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, a| [m.key]}
-    agreeing_acceptors <- (majority * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, a| [m.key]}
-    #majority <- (majority * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, a| [m.val]}
-    #majority <- majority {|m| [m.key]}
-
-    #accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
-    accepted_to_learner <~ accepted {|a| ["127.0.0.1:12347", append_info_for_learner(a.val, 1)]}
-  end
-
-  def print_gc()
-    #puts GC.stat
+    accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
   end
 
   def ding(val)
@@ -116,10 +105,6 @@ class PaxosProposer
 
   def append_info_for_learner(val, val2)
     val.push(val2)
-    puts "appending info"
-    #print_gc()
-    puts Time.now.to_f - val[2]
-    val[2] = Time.now.to_f
     return val
   end
 

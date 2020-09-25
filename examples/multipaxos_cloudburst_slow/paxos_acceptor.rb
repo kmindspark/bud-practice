@@ -14,10 +14,6 @@ class PaxosAcceptor
     super opts
   end
 
-  def print_gc()
-    puts GC.stat
-  end
-
   bootstrap do
     connect <~ [[@proposer, ip_port]]
   end
@@ -60,22 +56,11 @@ class PaxosAcceptor
     all_accept_val <= accept {|a| [a.val[2], a.val[0], a.val[1]]}
     max_accept_val <= all_accept_val.group([all_accept_val.slot, all_accept_val.val], max(all_accept_val.id))
 
-    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], Time.now.to_f]] if (pid.key == a.val[2] and a.val[0] < pid.val ) } #and print_gc()
-    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [true, a.val[2], Time.now.to_f]] if pid.key == a.val[2] and a.val[0] >= pid.val } #a.val[1]
-
-    all_accept_val <- (accept * max_promise_id).pairs {|a, pid| [a.val[2]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
-    all_promise_id <- (accept * max_promise_id).pairs {|a, pid| [a.val[2]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
-
-    stdio <~ all_accept_val.inspected
-    stdio <~ all_promise_id.inspected
+    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], a.val[1]]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
+    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [true, a.val[2], a.val[1]]] if pid.key == a.val[2] and a.val[0] >= pid.val }
 
     #max_accept_val <- (max_accept_val * accept * max_promise_id).combos {|mpv, a, pid| [mpv.key, mpv.val] if mpv.key == pid.key and pid.key == a.val[2] and a.val[0] >= pid.val }
     #max_accept_val <+ (accept * max_promise_id).pairs {|a, pid| [a.val[2], a.val[0]] if pid.key == a.val[2] and a.val[0] >= pid.val }
-  end
-
-  def print_gc()
-    #puts GC.stat
-    return true
   end
 
   def check_accept(id_and_val)

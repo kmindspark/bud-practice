@@ -446,11 +446,15 @@ module Bud
                       when @new_delta.object_id; "new_delta"
                     end
         puts "#{qualified_tabname}.#{storetype} ==> #{t.inspect}"
+        puts "hey I'm here"
       end
       return if t.nil? # silently ignore nils resulting from map predicates failing
+      start = Time.now.to_f
       t = prep_tuple(t)
       key = get_key_vals(t)
       merge_to_buf(store, key, t, store[key])
+      puts "hey there"
+      puts "curdelta: " + (Time.now.to_f - start).to_a
     end
 
     # Merge "tup" with key values "key" into "buf". "old" is an existing tuple
@@ -1008,6 +1012,8 @@ module Bud
         end
         @packer.write(marshall_indexes)
         @packer.flush
+
+        #if qualified_tabname ==
         toplevel.dsock.send_datagram(@wire_buf.string,
                                      the_locspec[0], the_locspec[1])
 
@@ -1395,7 +1401,7 @@ module Bud
       @linenum = 0
       @invalidated = true
     end
-    
+
     def tick
       @invalidated = true
     end
