@@ -446,15 +446,15 @@ module Bud
                       when @new_delta.object_id; "new_delta"
                     end
         puts "#{qualified_tabname}.#{storetype} ==> #{t.inspect}"
-        puts "hey I'm here"
       end
       return if t.nil? # silently ignore nils resulting from map predicates failing
       start = Time.now.to_f
       t = prep_tuple(t)
       key = get_key_vals(t)
       merge_to_buf(store, key, t, store[key])
-      puts "hey there"
-      puts "curdelta: " + (Time.now.to_f - start).to_a
+      if qualified_tabname.to_s == "accepted"
+        #puts "curdelta-" + qualified_tabname.to_s + ": " + (Time.now.to_f - start).to_s
+      end
     end
 
     # Merge "tup" with key values "key" into "buf". "old" is an existing tuple
@@ -603,11 +603,13 @@ module Bud
     public
     # instantaneously merge items from collection +o+ into +buf+
     def <=(collection)
+      start_time = Time.now.to_f
       unless bud_instance.toplevel.inside_tick
         raise Bud::CompileError, "illegal use of <= outside of bloom block, use <+ instead"
       end
 
       merge(collection)
+      puts "curdelta=>" + (Time.now.to_f - start_time).to_s
     end
 
     # buffer items to be merged atomically at end of this timestep

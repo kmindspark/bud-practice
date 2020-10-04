@@ -4,7 +4,7 @@ module PaxosProtocol
       channel :connect
       channel :client_request #destination
       channel :prepare
-      channel :promise, [:@addr, :id, :valid, :have_prev_val, :max_prev_id, :max_prev_val, :slot, :ip]
+      channel :promise, [:@addr, :id, :valid, :have_prev_val, :max_prev_id, :max_prev_val, :slot, :ip, :timestamp]
       channel :accept
       channel :accepted
       scratch :majority
@@ -41,8 +41,9 @@ module PaxosProtocol
       scratch :agreeing_acceptor_size
 
       scratch :sink
-      periodic :timer, 1
+      periodic :timer, 0.3
 
+      channel :test_channel
 
       #now transferring ruby functionality to Bloom
       #lset :acceptors

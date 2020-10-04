@@ -86,6 +86,7 @@ class PaxosProposer
     #stdio <~ sent_for_slot.inspected
 
     majority <= (num_acceptors * agreeing_acceptor_size * promise * sent_for_slot).combos(promise.slot => sent_for_slot.key) {|n, a, p, s| [p.slot, p.id] if (p.valid and (a.key + 1)*2 > n.key and s.val == 1)}
+    sink <= promise {|p| [test_print(Time.now.to_f - p.timestamp)]}
 
     #Send accept message to acceptors
     accept <~ (majority * nodelist * max_advocate_val).combos(max_advocate_val.slot => majority.key) {|m, n, a| [n.key, [m.val, a.val, m.key, Time.now.to_f]]}#
@@ -97,7 +98,9 @@ class PaxosProposer
     #majority <- majority {|m| [m.key]}
 
     #accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
-    accepted_to_learner <~ accepted {|a| ["127.0.0.1:12347", append_info_for_learner(a.val, 1)]}
+    accepted_to_learner <~ accepted {|a| ["127.0.0.1:12347", append_info_for_learner(a.val, 1, Time.now.to_f)]}
+
+    #sink <= test_channel {|c| [test_print(Time.now.to_f - c.val[0])]}
   end
 
   def print_gc()
@@ -110,15 +113,15 @@ class PaxosProposer
   end
 
   def test_print(val)
-    puts val
+    puts "test_delta, " + val.to_s
     return true
   end
 
-  def append_info_for_learner(val, val2)
+  def append_info_for_learner(val, val2, t)
     val.push(val2)
-    puts "appending info"
+    #puts "appending info"
     #print_gc()
-    puts Time.now.to_f - val[2]
+    puts "issue_delta, " + (t - val[2]).to_s
     val[2] = Time.now.to_f
     return val
   end

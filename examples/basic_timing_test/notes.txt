@@ -1,0 +1,2 @@
+Run phase 1 before client request
+Phase 2 slots independent, round 2 independent of proxy leader (can both be visualized in diagram?)

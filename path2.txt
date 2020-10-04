@@ -1,0 +1,37 @@
+RubyGems Environment:
+  - RUBYGEMS VERSION: 3.0.6
+  - RUBY VERSION: 2.6.3 (2019-04-16 patchlevel 62) [x86_64-darwin18]
+  - INSTALLATION DIRECTORY: /Users/kaushikshivakumar/.rvm/gems/ruby-2.6.3
+  - USER INSTALLATION DIRECTORY: /Users/kaushikshivakumar/.gem/ruby/2.6.0
+  - RUBY EXECUTABLE: /Users/kaushikshivakumar/.rvm/rubies/ruby-2.6.3/bin/ruby
+  - GIT EXECUTABLE: /usr/bin/git
+  - EXECUTABLE DIRECTORY: /Users/kaushikshivakumar/.rvm/gems/ruby-2.6.3/bin
+  - SPEC CACHE DIRECTORY: /Users/kaushikshivakumar/.gem/specs
+  - SYSTEM CONFIGURATION DIRECTORY: /Users/kaushikshivakumar/.rvm/rubies/ruby-2.6.3/etc
+  - RUBYGEMS PLATFORMS:
+    - ruby
+    - x86_64-darwin-18
+  - GEM PATHS:
+     - /Users/kaushikshivakumar/.rvm/gems/ruby-2.6.3
+     - /Users/kaushikshivakumar/.rvm/rubies/ruby-2.6.3/lib/ruby/gems/2.6.0
+  - GEM CONFIGURATION:
+     - :update_sources => true
+     - :verbose => true
+     - :backtrace => false
+     - :bulk_threshold => 1000
+  - REMOTE SOURCES:
+     - https://rubygems.org/
+  - SHELL PATH:
+     - /Users/kaushikshivakumar/.rvm/gems/ruby-2.6.3/bin
+     - /Users/kaushikshivakumar/.rvm/gems/ruby-2.6.3@global/bin
+     - /Users/kaushikshivakumar/.rvm/rubies/ruby-2.6.3/bin
+     - /Users/kaushikshivakumar/anaconda2/condabin
+     - /Library/Frameworks/Python.framework/Versions/3.7/bin
+     - /usr/local/bin
+     - /usr/bin
+     - /bin
+     - /usr/sbin
+     - /sbin
+     - /Users/kaushikshivakumar/.rvm/bin
+     - /Users/kaushikshivakumar/cs61b-software/bin
+     - /Users/kaushikshivakumar/.rvm/bin
