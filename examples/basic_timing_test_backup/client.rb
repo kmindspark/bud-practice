@@ -21,17 +21,16 @@ class Client
   end
 
   bloom do
+    slot_num <- (slot_num * timer).pairs {|p, c| [p.key]}
+    slot_num <+ (slot_num * timer).pairs {|p, c| [p.key + 1]}
+
     timer_buffer <= (timer * slot_num).pairs { |t, s| [s.key, Time.now.to_f, Time.now.to_f + 0.0001, ip_port] }
-
-    slot_num <- (slot_num * timer_buffer).pairs {|p, c| [p.key]}
-    slot_num <+ (slot_num * timer_buffer).pairs {|p, c| [p.key + 1]}
-
-    test_channel <~ (timer_buffer * slot_num).combos {|b, s| ["127.0.0.1:12347", s.key, b.id, b.val, b.ip]}
+    test_channel <~ (timer_buffer * slot_num).pairs {|b, s| ["127.0.0.1:12347", s.key, b.id, b.val, b.ip]}
 
     stdio <~ test_channel.inspected
-
-    timer_buffer <- timer_buffer {|c| c}
-    sink <= timer_buffer.group([timer_buffer.val], max(timer_buffer.id))
+    temp_table <+ timer_buffer {|c| [c.id, c.val]}
+    temp_table <- temp_table {|c| c}
+    sink <= temp_table.group([temp_table.val], max(temp_table.key))
     sink2 <= response {|s| [s.val] if print_time()}
   end
 end

@@ -33,10 +33,10 @@ class PaxosProposer
 
   bloom do
     #rewrite joins to be faster
-    learnerlist <= connect_learner { |c| [c.val]}
-    nodelist <= connect { |c| [c.val] } #rename connect_acceptor
-    num_acceptors <= nodelist.group([], count(nodelist.key))
-    clientlist <= client_request {|c| [c.val[0]]}
+    #learnerlist <= connect_learner { |c| [c.val]}
+    #nodelist <= connect { |c| [c.val] } #rename connect_acceptor
+    #num_acceptors <= nodelist.group([], count(nodelist.key))
+    #clientlist <= client_request {|c| [c.val[0]]}
 
     #A Proposer creates a message, which we call a "Prepare", identified with a number n.
     #Note that n is not the value to be proposed and maybe agreed on, but just a number which uniquely identifies this initial message by the proposer (to be sent to the acceptors).
@@ -50,16 +50,17 @@ class PaxosProposer
     #stdio <~ client_request.inspected
 
     #accept_sent <= (client_request * slot_num).pairs {|c, s| [s.key, 0]}
-    all_advocate_val <= (client_request * slot_num * propose_num).pairs {|c, s, p| [s.key, p.key*10 + $proposer_id, c.val[3]]}
 
-    slot_num <- (slot_num * client_request).pairs {|p, c| [p.key]}
-    slot_num <+ (slot_num * client_request).pairs {|p, c| [p.key + 1]}
+    all_advocate_val <= (timer * slot_num).pairs {|c, p| [s.key, Time.now.to_f*10 + $proposer_id, Time.now.to_f*10 + 0.001]}
+
+    slot_num <- (slot_num * all_advocate_val).pairs {|p, c| [p.key]}
+    slot_num <+ (slot_num * all_advocate_val).pairs {|p, c| [p.key + 1]}
 
     #Assuming 10 > num proposers, this ensures that all IDs are unique
-    client_request_temp <= (client_request * propose_num * slot_num).combos {|c, p, s| [p.key*10 + $proposer_id, s.key]}
+    client_request_temp <= (all_advocate_val * slot_num).combos {|c, s| [c.id, s.key]}
 
     #Send prepare message (after all the preparation)
-    prepare <~ (client_request_temp * nodelist).pairs {|c, n| [n.key, [c.key, c.val]]}
+    prepare <~ client_request_temp {|c| ["127.0.0.1:12346", [c.key, c.val]]}
 
     #Receive promise from acceptor
     #agreeing_acceptors <= promise {|p| [p.slot, p.ip, -1] if p.valid}

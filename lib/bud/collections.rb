@@ -452,7 +452,7 @@ module Bud
       t = prep_tuple(t)
       key = get_key_vals(t)
       merge_to_buf(store, key, t, store[key])
-      if qualified_tabname.to_s == "accepted"
+      if qualified_tabname.to_s == "max_advocate_val_temp"
         #puts "curdelta-" + qualified_tabname.to_s + ": " + (Time.now.to_f - start).to_s
       end
     end
@@ -793,9 +793,12 @@ module Bud
     end
 
     def group(key_cols, *aggpairs, &blk)
+      start = Time.now.to_f
       key_cols = key_cols.map{|k| canonicalize_col(k)} unless key_cols.nil?
       aggpairs = prep_aggpairs(aggpairs)
-      return to_push_elem.group(key_cols, *aggpairs, &blk)
+      return_val = to_push_elem.group(key_cols, *aggpairs, &blk)
+      puts "grouping time" + (Time.now.to_f - start).to_s
+      return return_val
     end
 
     def notin(collection, *preds, &blk)

@@ -6,7 +6,7 @@ module Protocol
       scratch :sink
       scratch :sink2
       periodic :timer, 0.001
-      table :timer_buffer, [:slot, :id, :val, :ip]
+      scratch :timer_buffer, [:slot, :id, :val, :ip]
       channel :response, [:@addr, :slot, :id, :val]
       table :slot_num
 
