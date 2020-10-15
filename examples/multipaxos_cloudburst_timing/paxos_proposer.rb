@@ -74,7 +74,7 @@ class PaxosProposer
     #So, the Accept message is either (n, v=z) or, in case none of the Acceptors previously accepted a value, (n, v=x).
 
     #all_advocate_val <= promise {|p| [p.slot, p.max_prev_id, p.max_prev_val] if p.valid and p.have_prev_val}
-    max_advocate_val_temp <= all_advocate_val.group([all_advocate_val.slot], max(all_advocate_val.id))
+    #max_advocate_val_temp <= all_advocate_val.group([all_advocate_val.slot], max(all_advocate_val.id))
     #stdio <~ all_advocate_val.inspected
     #max_advocate_val <= (max_advocate_val_temp * all_advocate_val).combos(max_advocate_val_temp.slot => all_advocate_val.slot) {|m, a| [m.slot, m.id, a.val] if m.id == a.id}
     #all_advocate_val <- max_advocate_val {|m| [m.slot, m.id, m.val]}

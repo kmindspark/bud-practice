@@ -31,15 +31,16 @@ class PaxosAcceptor
     #number, say m, and the corresponding accepted value, say w, in its response to the Proposer.
     #Otherwise (that is, n is less than or equal to any previous proposal number received from any Proposer by the Acceptor) the Acceptor can ignore the received proposal. It does not have to answer in this case for Paxos to work.
     #However, for the sake of optimization, sending a denial (Nack) response would tell the Proposer that it can stop its attempt to create consensus with proposal n.
-    #cur_prep <= prepare {|p| [p.val[1]]}
+    cur_prep <= prepare {|p| [p.val[1]]}
     #stdio <~ accept.inspected
-    promise <~ prepare {|p| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f]}
+    #promise <~ prepare {|p| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f]}
 
-    #existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
-    #existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
+    existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
+    existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
 
     all_promise_id <+ prepare {|p| [p.val[1], p.val[0]]}
     max_promise_id <= all_promise_id.group([all_promise_id.key], max(all_promise_id.val))
+    #all_promise_id <- all_promise_id {|ap| ap} #TEMP
 
     #stdio <~ max_promise_id.inspected
 
@@ -47,9 +48,9 @@ class PaxosAcceptor
     #max_promise_id <+ (prepare * max_promise_id).pairs {|p, pid| [p.val[1], p.val[0]] if p.val[1] == pid.key and p.val[0] > pid.val}
     #max_promise_id <+ (prepare * existing_id).pairs {|p, eid| [p.val[1], p.val[0]]}
 
-    #promise <~ (prepare * max_promise_id * max_accept_val).combos(max_promise_id.key => max_accept_val.key) {|p, mp, ma| [@proposer, p.val[0], p.val[0] == mp.val, ma.val > 0, mp.val, ma.val, p.val[1], ip_port, Time.now.to_f] if p.val[1] == mp.key and p.val[0] > mp.val}
-    #promise <~ (prepare * max_promise_id * existing_val).combos {|p, mp, ma| [@proposer, p.val[0], p.val[0] == mp.val, false, mp.val, 0, p.val[1], ip_port, Time.now.to_f] if p.val[1] == mp.key}
-    #promise <~ (prepare * existing_id * existing_val).combos {|p, mp, ma| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f] if p.val[1] == ma.key}
+    promise <~ (prepare * max_promise_id * max_accept_val).combos(max_promise_id.key => max_accept_val.key) {|p, mp, ma| [@proposer, p.val[0], p.val[0] == mp.val, ma.val > 0, mp.val, ma.val, p.val[1], ip_port, Time.now.to_f] if p.val[1] == mp.key and p.val[0] > mp.val}
+    promise <~ (prepare * max_promise_id * existing_val).combos {|p, mp, ma| [@proposer, p.val[0], p.val[0] == mp.val, false, mp.val, 0, p.val[1], ip_port, Time.now.to_f] if p.val[1] == mp.key}
+    promise <~ (prepare * existing_id * existing_val).combos {|p, mp, ma| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f] if p.val[1] == ma.key}
     #ensure that both are not populated at the same time, why mutually exclusive, enforce
 
     #If an Acceptor receives an Accept message, (n, v), from a Proposer, it must accept it if and only if it has not already promised (in Phase 1b of the Paxos protocol) to only consider proposals having an identifier greater than n.
@@ -61,8 +62,8 @@ class PaxosAcceptor
     all_accept_val <= accept {|a| [a.val[2], a.val[0], a.val[1]]}
     max_accept_val <= all_accept_val.group([all_accept_val.slot, all_accept_val.val], max(all_accept_val.id))
 
-    #accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], Time.now.to_f]] if (pid.key == a.val[2] and a.val[0] < pid.val ) } #and print_gc()
-    #accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [true, a.val[2], Time.now.to_f]] if pid.key == a.val[2] and a.val[0] >= pid.val } #a.val[1]
+    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [false, a.val[2], Time.now.to_f]] if (pid.key == a.val[2] and a.val[0] < pid.val ) } #and print_gc()
+    accepted <~ (accept * max_promise_id).pairs {|a, pid| [@proposer, [true, a.val[2], Time.now.to_f]] if pid.key == a.val[2] and a.val[0] >= pid.val } #a.val[1]
 
     all_accept_val <- (accept * max_promise_id).pairs {|a, pid| [a.val[2]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
     all_promise_id <- (accept * max_promise_id).pairs {|a, pid| [a.val[2]] if (pid.key == a.val[2] and a.val[0] < pid.val) }
@@ -70,10 +71,6 @@ class PaxosAcceptor
     stdio <~ all_accept_val.inspected
     stdio <~ all_promise_id.inspected
 
-    #test_channel <~ accept {|a| ["127.0.0.1:12345", [Time.now.to_f]]}
-
-    #max_accept_val <- (max_accept_val * accept * max_promise_id).combos {|mpv, a, pid| [mpv.key, mpv.val] if mpv.key == pid.key and pid.key == a.val[2] and a.val[0] >= pid.val }
-    #max_accept_val <+ (accept * max_promise_id).pairs {|a, pid| [a.val[2], a.val[0]] if pid.key == a.val[2] and a.val[0] >= pid.val }
   end
 
   def print_gc()

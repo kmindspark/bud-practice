@@ -31,9 +31,9 @@ class PaxosAcceptor
     #number, say m, and the corresponding accepted value, say w, in its response to the Proposer.
     #Otherwise (that is, n is less than or equal to any previous proposal number received from any Proposer by the Acceptor) the Acceptor can ignore the received proposal. It does not have to answer in this case for Paxos to work.
     #However, for the sake of optimization, sending a denial (Nack) response would tell the Proposer that it can stop its attempt to create consensus with proposal n.
-    #cur_prep <= prepare {|p| [p.val[1]]}
+    cur_prep <= prepare {|p| [p.val[1]]}
     #stdio <~ accept.inspected
-    promise <~ prepare {|p| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f]}
+    #promise <~ prepare {|p| [@proposer, p.val[0], true, false, 0, 0, p.val[1], ip_port, Time.now.to_f]}
 
     #existing_id <= cur_prep.notin(max_promise_id, :key=>:key) {|c, pid| true}
     #existing_val <= cur_prep.notin(max_accept_val, :key=>:key) {|c, pid| true}
