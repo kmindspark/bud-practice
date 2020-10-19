@@ -33,7 +33,7 @@ module PaxosProtocol
       table :all_promise_id
       scratch :max_promise_id
       table :all_accept_val, [:slot, :id] => [:val]
-      scratch :max_accept_val, [:key, :val] => [:id]
+      table :max_accept_val, [:key, :val] => [:id]
 
       scratch :existing_id
       scratch :existing_val
@@ -43,7 +43,7 @@ module PaxosProtocol
 
       scratch :sink
       scratch :sink2
-      periodic :timer, 0.005
+      periodic :timer, 0.05
 
       channel :test_channel
 
