@@ -65,7 +65,7 @@ class PaxosProposer
     agreeing_acceptors <= promise {|p| [p.slot, p.ip, -1] if p.valid}
     #handle timeouts
 
-    sink <= promise {|p| [test_print(Time.now.to_f - p.timestamp)]}
+    #sink <= promise {|p| [test_print(Time.now.to_f - p.timestamp)]}
 
     #If a Proposer receives a majority of Promises from a Quorum of Acceptors, it needs to set a value v to its proposal.
     #If any Acceptors had previously accepted any proposal, then they'll have sent their values to the Proposer, who now must set the value of its proposal, v,
@@ -96,9 +96,9 @@ class PaxosProposer
     accept_sent <- (majority * accept_sent).combos(majority.key => accept_sent.key) {|m, a| a}
     agreeing_acceptors <- (majority * agreeing_acceptors).combos(majority.key => agreeing_acceptors.key) {|m, a| a}
 
-    sink2 <= agreeing_acceptors {|a| [a.key, 1] if ding(a.key)}
+    #sink2 <= agreeing_acceptors {|a| [a.key, 1] if ding(a.key)}
 
-    #accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key)]}
+    #accepted_to_learner <~ (accepted * clientlist * num_acceptors).combos {|a, l, n| [l.key, append_info_for_learner(a.val, n.key, l.key, Time.now.to_f)]}
     accepted_to_learner <~ accepted {|a| ["127.0.0.1:12347", append_info_for_learner(a.val, 1, Time.now.to_f)]}
 
     #sink <= test_channel {|c| [test_print(Time.now.to_f - c.val[0])]}
@@ -118,12 +118,13 @@ class PaxosProposer
     return true
   end
 
-  def append_info_for_learner(val, val2, t)
+  def append_info_for_learner(val, val2, t) #val3
     val.push(val2)
     #puts "appending info"
     #print_gc()
-    puts "issue_delta, " + (t - val[2]).to_s
-    val[2] = Time.now.to_f
+    #puts "issue_delta, " + (t - val[2]).to_s
+    #val[2] = Time.now.to_f
+    #val.push(val3)
     return val
   end
 

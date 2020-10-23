@@ -5,7 +5,7 @@ import argparse
 
 
 local = False
-AWS_FUNCTION_ELB = 'a9df57853f1e242098735784b295efa2-791225718.us-east-1.elb.amazonaws.com'
+AWS_FUNCTION_ELB = 'ab434ded48b0d4f92a41bb828e77974b-35726211.us-east-1.elb.amazonaws.com'
 MY_IP = 'ec2-35-153-50-62' #'18.209.27.93'
 
 from cloudburst.client.client import CloudburstConnection

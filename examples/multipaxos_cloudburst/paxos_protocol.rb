@@ -43,7 +43,8 @@ module PaxosProtocol
 
       scratch :sink
       scratch :sink2
-      periodic :timer, 0.05
+      periodic :timer, 0.00245 #99999
+      periodic :throughput_timer, 1
 
       channel :test_channel
 
