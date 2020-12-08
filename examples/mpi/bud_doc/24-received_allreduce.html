@@ -1,0 +1,7 @@
+<html><meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+<head><link rel="stylesheet" type="text/css" href="style.css" /></head><body>
+<h1>Rule 24</h1><br>
+<pre class="code" style='font-size:20px'>
+<span class="ident">received_allreduce</span> <span class="punct">&lt;</span> <span class="punct">(+(</span><span class="ident">received_allreduce</span> <span class="punct">*</span> <span class="ident">message_func_allreduce</span><span class="punct">).</span><span class="ident">pairs</span><span class="punct">(</span><span class="symbol">:key</span> <span class="punct">=&gt;</span> <span class="symbol">:key</span><span class="punct">)</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">r</span><span class="punct">,</span> <span class="ident">m</span><span class="punct">|</span>
+  <span class="punct">[</span><span class="ident">r</span><span class="punct">.</span><span class="ident">key</span><span class="punct">,</span> <span class="punct">((</span><span class="number">100</span> <span class="punct">+</span> <span class="ident">r</span><span class="punct">.</span><span class="ident">val</span><span class="punct">)</span> <span class="punct">+</span> <span class="ident">m</span><span class="punct">.</span><span class="ident">val</span><span class="punct">)]</span> <span class="keyword">if</span> <span class="ident">hello</span>
+<span class="keyword">end</span><span class="punct">)</span></pre>

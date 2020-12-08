@@ -1,0 +1,5 @@
+<html><meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+<head><link rel="stylesheet" type="text/css" href="style.css" /></head><body>
+<h1>Rule 22</h1><br>
+<pre class="code" style='font-size:20px'>
+<span class="ident">message_func</span> <span class="punct">&lt;</span> <span class="punct">(</span><span class="ident">data</span> <span class="punct">{</span> <span class="punct">|</span><span class="ident">d</span><span class="punct">|</span> <span class="punct">[(</span><span class="attribute">@fn_ip_port</span> <span class="punct">+</span> <span class="punct">(</span><span class="ident">d</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">%</span> <span class="attribute">@num_receivers</span><span class="punct">).</span><span class="ident">to_s</span><span class="punct">),</span> <span class="ident">d</span><span class="punct">.</span><span class="ident">val</span><span class="punct">]</span> <span class="punct">}.~)</span></pre>

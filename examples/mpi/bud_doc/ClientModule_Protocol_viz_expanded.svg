@@ -1,0 +1,55 @@
+digraph G {
+	graph [bb="0,0,257.15,203.6",
+		label=""
+	];
+	node [fontname="Times-Roman",
+		fontsize=18,
+		label="\N"
+	];
+	edge [fontname="Times-Roman",
+		fontsize=18
+	];
+	message_func	[URL="message_func.html",
+		height=0.54997,
+		label=message_func,
+		pos="84.146,91.799",
+		width=2.3374];
+	received	[URL="received.html",
+		height=0.5,
+		label=received,
+		pos="84.146,18",
+		shape=rect,
+		width=1.0972];
+	message_func -> received	[URL="23-received.html",
+		arrowsize=2,
+		minlen=1.5,
+		penwidth=5,
+		pos="e,84.146,36.021 84.146,71.935 84.146,67.063 84.146,61.647 84.146,56.191"];
+	data	[height=0.5,
+		label=data,
+		pos="84.146,175.6",
+		shape=rect,
+		width=0.75];
+	data -> message_func	[URL="22-message_func.html",
+		arrowsize=2,
+		minlen=1.5,
+		penwidth=5,
+		pos="e,84.146,111.84 84.146,157.25 84.146,149.86 84.146,140.92 84.146,132.08",
+		style=dashed];
+	S	[URL="javascript:advanceTo(-2)",
+		color=blue,
+		height=0.77778,
+		label=S,
+		penwidth=3,
+		pos="156.15,175.6",
+		shape=diamond,
+		width=0.75];
+	T	[URL="javascript:advanceTo(0)",
+		color=blue,
+		height=0.77778,
+		label=T,
+		penwidth=3,
+		pos="229.15,175.6",
+		shape=diamond,
+		width=0.77778];
+}
