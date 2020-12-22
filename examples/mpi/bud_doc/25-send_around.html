@@ -1,0 +1,9 @@
+<html><meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+<head><link rel="stylesheet" type="text/css" href="style.css" /></head><body>
+<h1>Rule 25</h1><br>
+<pre class="code" style='font-size:20px'>
+<span class="ident">send_around</span> <span class="punct">&lt;</span> <span class="punct">((</span><span class="ident">send_around</span> <span class="punct">*</span> <span class="ident">ips_allreduce</span><span class="punct">).</span><span class="ident">pairs</span> <span class="keyword">do</span> <span class="punct">|</span><span class="ident">s</span><span class="punct">,</span> <span class="ident">i</span><span class="punct">|</span>
+  <span class="keyword">if</span> <span class="punct">(</span><span class="ident">i</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">==</span> <span class="punct">((</span><span class="attribute">@client_id</span> <span class="punct">+</span> <span class="number">1</span><span class="punct">)</span> <span class="punct">%</span> <span class="number">4</span><span class="punct">))</span> <span class="keyword">and</span> <span class="punct">(</span><span class="ident">s</span><span class="punct">.</span><span class="ident">key</span> <span class="punct">!=</span> <span class="attribute">@client_id</span><span class="punct">)</span> <span class="keyword">then</span>
+    <span class="punct">[</span><span class="ident">i</span><span class="punct">.</span><span class="ident">val</span><span class="punct">,</span> <span class="ident">s</span><span class="punct">.</span><span class="ident">key</span><span class="punct">,</span> <span class="ident">s</span><span class="punct">.</span><span class="ident">val</span><span class="punct">]</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span><span class="punct">.~)</span></pre>
